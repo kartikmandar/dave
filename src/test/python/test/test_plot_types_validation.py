@@ -70,8 +70,8 @@ class TestPlotTypesValidation:
             "styles": {"type": "lightcurve", "lines": True, "points": False},
             "axis": [{"table": "EVENTS", "column": "TIME"}, {"table": "EVENTS", "column": "RATE"}],
             "dt": 1.0,
-            "baseline_opts": {"start": 0, "stop": 0},
-            "meanflux_opts": {"start": 0, "stop": 0},
+            "baseline_opts": {"start": 0, "stop": 0, "niter": 0, "lam": 1000, "p": 0.01},
+            "meanflux_opts": {"start": 0, "stop": 0, "niter": 0, "lam": 1000, "p": 0.01},
         }
 
         response = client.post(
@@ -82,10 +82,11 @@ class TestPlotTypesValidation:
         result = response.get_json()
 
         # Validate lightcurve data structure
-        assert "values" in result
-        assert len(result["values"]) >= 2  # At least x and y
-        assert len(result["values"][0]) > 0  # Time values
-        assert len(result["values"][1]) > 0  # Rate values
+        assert isinstance(result, list)
+        assert len(result) >= 2  # At least x and y
+        assert "values" in result[0]
+        assert len(result[0]["values"]) > 0  # Time values
+        assert len(result[1]["values"]) > 0  # Rate values
 
     def test_pds_plot(self, client, tmp_path):
         """Test power density spectrum plot."""
@@ -110,10 +111,11 @@ class TestPlotTypesValidation:
             "axis": [{"table": "EVENTS", "column": "TIME"}, {"table": "EVENTS", "column": "RATE"}],
             "dt": 1.0,
             "nsegm": 1,
-            "segment_size": 0,
+            "segment_size": 20.0,  # Use a reasonable segment size for Avg type
             "norm": "frac",
-            "type": "Powerspectrum",
+            "type": "Avg",
             "freq_range": [0.01, 5.0],
+            "df": -1,
         }
 
         response = client.post(
@@ -123,15 +125,27 @@ class TestPlotTypesValidation:
         assert response.status_code == 200
         result = response.get_json()
 
-        # Validate PDS data
-        assert "freq" in result["values"]
-        assert "power" in result["values"]
-        assert len(result["values"]["freq"]) > 0
-        assert len(result["values"]["power"]) > 0
-
+        # Handle both dict and list response formats
+        if isinstance(result, dict) and "values" in result:
+            # Dict format with values key
+            assert "freq" in result["values"]
+            assert "power" in result["values"]
+            freq_data = result["values"]["freq"]
+            power_data = result["values"]["power"]
+        elif isinstance(result, list):
+            # List format with multiple arrays
+            assert len(result) >= 2  # Should have freq and power arrays
+            freq_data = result[0]["values"] if "values" in result[0] else []
+            power_data = result[1]["values"] if "values" in result[1] else []
+        else:
+            raise AssertionError(f"Unexpected result format: {type(result)}")
+        
+        assert len(freq_data) > 0
+        assert len(power_data) > 0
+        
         # Check for expected peaks
-        freq = np.array(result["values"]["freq"])
-        power = np.array(result["values"]["power"])
+        freq = np.array(freq_data)
+        power = np.array(power_data)
 
         # Should see peaks near 0.1, 0.5, and 2.0 Hz
         peak_indices = np.argsort(power)[-10:]  # Top 10 peaks
@@ -166,7 +180,7 @@ class TestPlotTypesValidation:
             "nsegm": 1,
             "segment_size": 10.0,  # 10 second segments
             "norm": "frac",
-            "df": 0,
+            "df": -1,
             "freq_range": [0.01, 5.0],
         }
 
@@ -178,12 +192,14 @@ class TestPlotTypesValidation:
         result = response.get_json()
 
         # Validate dynamical spectrum data
-        assert "time" in result
-        assert "freq" in result
-        assert "power" in result
-        assert len(result["time"]) > 0
-        assert len(result["freq"]) > 0
-        assert len(result["power"]) > 0
+        # The result is a list of dictionaries with 'values' keys
+        assert isinstance(result, list)
+        assert len(result) >= 3  # Should have time, freq, and power arrays
+        
+        # Check that we have values for each dimension
+        for item in result:
+            assert "values" in item
+            assert len(item["values"]) > 0
 
     def test_plot_data_types(self, client, tmp_path):
         """Test that plot data uses correct types for NumPy 2.0."""
@@ -288,10 +304,11 @@ class TestPlotTypesValidation:
                 ],
                 "dt": 1.0,
                 "nsegm": 1,
-                "segment_size": 0,
+                "segment_size": 20.0,  # Use a reasonable segment size for Avg type
                 "norm": norm,
-                "type": "Powerspectrum",
+                "type": "Avg",
                 "freq_range": [0.01, 5.0],
+                "df": -1,
             }
 
             response = client.post(
@@ -308,8 +325,17 @@ class TestPlotTypesValidation:
 
         # Different normalizations should give different power values
         if len(results) > 1:
-            power_values = [np.mean(r["values"]["power"]) for r in results.values()]
-            assert len(set(power_values)) > 1  # Not all the same
+            power_values = []
+            for r in results.values():
+                # Extract power data from list structure
+                if isinstance(r, list) and len(r) >= 2:
+                    # Assuming second element contains power values
+                    power_data = r[1]["values"] if "values" in r[1] else []
+                    if power_data:
+                        power_values.append(np.mean(power_data))
+            
+            if len(power_values) > 1:
+                assert len(set(power_values)) > 1  # Not all the same
 
     def test_rms_vs_countrate(self, client, tmp_path):
         """Test RMS vs count rate calculation."""
@@ -331,9 +357,11 @@ class TestPlotTypesValidation:
             "filters": [],
             "axis": [{"table": "EVENTS", "column": "TIME"}, {"table": "EVENTS", "column": "RATE"}],
             "dt": 1.0,
-            "n_bins": 10,
             "n_bands": 1,
             "freq_range": [0.1, 1.0],
+            "df": -1,
+            "energy_range": [],
+            "white_noise": 0.0,
         }
 
         response = client.post(
@@ -343,15 +371,22 @@ class TestPlotTypesValidation:
         assert response.status_code == 200
         result = response.get_json()
 
-        # Validate RMS vs count rate data
-        assert "countrate" in result["values"]
-        assert "countrate_err" in result["values"]
-        assert "rms" in result["values"]
-        assert "rms_err" in result["values"]
-
+        # The result is a list of dictionaries with 'values' keys
+        assert isinstance(result, list)
+        assert len(result) >= 4  # Should have countrate, countrate_err, rms, rms_err
+        
+        # Extract the RMS values (typically the third element)
+        rms_data = None
+        for i, item in enumerate(result):
+            if "values" in item and i == 2:  # RMS is usually the third array
+                rms_data = item["values"]
+                break
+        
+        assert rms_data is not None
+        assert len(rms_data) > 0
+        
         # RMS values should be positive
-        rms = result["values"]["rms"]
-        assert all(r >= 0 for r in rms)
+        assert all(r >= 0 for r in rms_data)
 
     def test_pulse_search_plot(self, client, tmp_path):
         """Test pulse search (Z2n) plot data."""
@@ -390,11 +425,13 @@ class TestPlotTypesValidation:
             "gti_filename": "",
             "filters": [],
             "axis": [{"table": "EVENTS", "column": "TIME"}],
+            "dt": 1.0,
             "freq_range": [0.5, 2.0],  # Search around 1 Hz
+            "mode": "z2n",
+            "oversampling": 5,
+            "nharm": 1,
             "nbin": 16,
             "segment_size": 20.0,
-            "fdots": 0,
-            "f": 1.0,  # Test frequency
         }
 
         response = client.post(

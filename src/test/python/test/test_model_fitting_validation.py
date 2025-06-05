@@ -152,9 +152,24 @@ class TestModelFittingValidation:
             # Note: DAVE might have a specific fitting endpoint
             fit_params = {
                 "filename": filename,
+                "bck_filename": "",
+                "gti_filename": "",
+                "filters": [],
+                "axis": [
+                    {"table": "EVENTS", "column": "TIME"},
+                    {"table": "EVENTS", "column": "RATE"},
+                ],
+                "dt": 1.0,
+                "nsegm": 1,
+                "segment_size": 50.0,
+                "norm": "leahy",
+                "type": "Sng",
+                "df": -1,
                 "models": [
                     {"type": "PowerLaw", "params": {"amplitude": 50.0, "x_0": 1.0, "alpha": -2.0}}
                 ],
+                "priors": {},
+                "sampling_params": {"n_walkers": 10, "n_iters": 100, "burnin": 50},
             }
 
             # Check if there's a fitting endpoint

@@ -17,7 +17,7 @@ module.exports = async function globalTeardown() {
           global.__PYTHON_SERVER__.kill('SIGKILL');
         }
         resolve();
-      }, 5001);
+      }, 5000);
     });
   }
 };

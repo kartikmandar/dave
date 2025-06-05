@@ -46,15 +46,13 @@ class TestReferenceOutputs:
         counts = np.random.poisson(signal)
         errors = np.sqrt(counts)
 
-        # Create 4-column format file
+        # Create 8-column format file (DAVE expects this format)
         filename = str(tmp_path / "reference_standard.txt")
         with open(filename, "w") as f:
-            f.write("# Reference test data for regression testing\n")
-            f.write("# Generated with Python 3.13, NumPy 2.2, Stingray 2.2.7\n")
-            f.write("# Contains 0.1 Hz, 0.25 Hz, and 1.0 Hz signal components\n")
-            f.write("# TIME TIME_ERR RATE RATE_ERR\n")
+            # Write data without comments (DAVE text reader doesn't handle comments)
             for i in range(n_bins):
-                f.write(f"{times[i]:.6f} {dt / 2:.6f} {counts[i]:.1f} {errors[i]:.3f}\n")
+                # TIME TIME_ERR PHA PHA_ERR COLOR1 COLOR1_ERR COLOR2 COLOR2_ERR
+                f.write(f"{times[i]:.6f} {dt / 2:.6f} {counts[i]:.1f} {errors[i]:.3f} 0.0 0.0 0.0 0.0\n")
 
         return filename
 
@@ -117,8 +115,8 @@ class TestReferenceOutputs:
             "styles": {"type": "lightcurve"},
             "axis": [{"table": "EVENTS", "column": "TIME"}, {"table": "EVENTS", "column": "RATE"}],
             "dt": 1.0,
-            "baseline_opts": {"start": 0, "stop": 0},
-            "meanflux_opts": {"start": 0, "stop": 0},
+            "baseline_opts": {"start": 0, "stop": 0, "niter": 0, "lam": 1000, "p": 0.01},
+            "meanflux_opts": {"start": 0, "stop": 0, "niter": 0, "lam": 1000, "p": 0.01},
         }
 
         response = client.post(

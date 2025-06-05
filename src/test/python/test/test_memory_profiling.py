@@ -79,16 +79,25 @@ class TestMemoryProfiling:
         # Create large dataset file
         test_file = tmp_path / "large_events.txt"
 
+        # Create errors for each column
+        time_err = np.zeros(n_events)  # Time errors (typically 0)
+        energy_err = np.sqrt(energy_data).astype(float)  # Typical Poisson errors
+        
+        # Color1 and Color2 for compatibility with expected format
+        color1_data = np.random.uniform(0, 1, n_events)
+        color1_err = np.zeros(n_events)
+        color2_data = np.random.uniform(0, 1, n_events)
+        color2_err = np.zeros(n_events)
+        
         # Write in chunks to avoid memory issues during creation
         chunk_size = 50000
         with open(test_file, "w") as f:
-            f.write("# Large event dataset for memory profiling\\n")
-            f.write("# TIME\\tPI\\n")
-
+            # Write data in the expected format: time, time_err, pha, pha_err, color1, color1_err, color2, color2_err
             for i in range(0, n_events, chunk_size):
                 chunk_end = min(i + chunk_size, n_events)
                 for j in range(i, chunk_end):
-                    f.write(f"{time_data[j]:.6f}\\t{energy_data[j]}\\n")
+                    # Write all 8 values on a single line
+                    f.write(f"{time_data[j]:.6f} {time_err[j]:.6f} {energy_data[j]:.1f} {energy_err[j]:.6f} {color1_data[j]:.6f} {color1_err[j]:.6f} {color2_data[j]:.6f} {color2_err[j]:.6f}\n")
 
         file_size_mb = test_file.stat().st_size / 1024 / 1024
         print(f"Created file: {file_size_mb:.1f} MB")
@@ -114,12 +123,20 @@ class TestMemoryProfiling:
 
         error_data = np.sqrt(count_rate)  # Poisson errors
 
+        # Create additional columns for compatibility
+        pha_data = np.random.randint(20, 2000, n_bins).astype(float)
+        pha_err = np.sqrt(pha_data)
+        color1_data = np.random.uniform(0, 1, n_bins)
+        color1_err = np.zeros(n_bins)
+        color2_data = np.random.uniform(0, 1, n_bins)
+        color2_err = np.zeros(n_bins)
+        
         test_file = tmp_path / "large_lightcurve.txt"
         with open(test_file, "w") as f:
-            f.write("# Large lightcurve for memory profiling\\n")
-            f.write("# TIME\\tRATE\\tERROR\\n")
+            # Write data in the expected format: time, time_err, pha, pha_err, color1, color1_err, color2, color2_err
             for i in range(n_bins):
-                f.write(f"{time_data[i]:.6f}\\t{count_rate[i]:.6f}\\t{error_data[i]:.6f}\\n")
+                # Write all 8 values on a single line
+                f.write(f"{time_data[i]:.6f} {error_data[i]:.6f} {pha_data[i]:.1f} {pha_err[i]:.6f} {color1_data[i]:.6f} {color1_err[i]:.6f} {color2_data[i]:.6f} {color2_err[i]:.6f}\n")
 
         file_size_mb = test_file.stat().st_size / 1024 / 1024
         print(f"Created lightcurve file: {file_size_mb:.1f} MB")
