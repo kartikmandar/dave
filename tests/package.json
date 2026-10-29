@@ -4,12 +4,14 @@
   "description": "E2E tests for DAVE application",
   "scripts": {
     "test": "playwright test",
+    "test:browser": "playwright test --config playwright.browser.config.js",
+    "test:workflow": "playwright test --config playwright.workflow.config.js",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.1",
-    "electron": "^42.4.0",
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "electron": "43.8.4"
   }
 }

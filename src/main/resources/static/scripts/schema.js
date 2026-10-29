@@ -238,7 +238,7 @@ function extractEnergyRangeTextRateTable (rateTable) {
         var rangeVals = range.split(":");
         var rangeStart = rangeVals[0].replace(/[^\d.-]/g, '');
         var rangeEnd = rangeVals[1].replace(/[^\d.-]/g, '');
-        if (jQuery.isNumeric(rangeStart) && jQuery.isNumeric(rangeEnd)){
+        if (isNumericValue(rangeStart) && isNumericValue(rangeEnd)){
           if (unit.toLowerCase() == "ev") {
             return fixedPrecision(rangeStart/1000, 3) + " - " + fixedPrecision(rangeEnd/1000, 3) + " keV";
           } else {

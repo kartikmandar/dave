@@ -311,7 +311,7 @@ function DynSpPlot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPl
   this.saveAsCSV = function () {
     var data = currentObj.data;
     if (!isNull(data)){
-      var csvContent = "data:text/csv;charset=utf-8,";
+      var csvContent = "";
       for (time_idx in data[2].values) {
         for (frec_idx in data[0].values) {
           var infoArray = [data[2].values[time_idx], data[0].values[frec_idx], data[1].values[time_idx].values[frec_idx]];
@@ -319,7 +319,7 @@ function DynSpPlot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPl
           csvContent += time_idx < data[2].values.length ? dataString + "\n" : dataString;
         }
       }
-      saveRawToFile(currentObj.getTitle() + ".csv", encodeURI(csvContent));
+      saveRawToFile(currentObj.getTitle() + ".csv", csvContent);
     }
   }
 

@@ -636,6 +636,7 @@ def get_power_density_spectrum(
     power_err = []
     duration = []
     warnmsg = []
+    segment_count = None
 
     try:
         pds, lc, gti = create_power_density_spectrum(
@@ -655,6 +656,7 @@ def get_power_density_spectrum(
             freq = pds.freq
             power = pds.power
             power_err = pds.power_err
+            segment_count = pds.dave_segment_count
 
             duration = [lc.tseg]
             warnmsg = [""]
@@ -678,6 +680,8 @@ def get_power_density_spectrum(
     logging.debug("Result power density spectrum .... " + str(len(freq)))
     result = push_to_results_array([], freq)
     result = push_to_results_array_with_errors(result, power, power_err)
+    if segment_count is not None:
+        result[1]["n_segments"] = segment_count
     result = push_to_results_array(result, duration)
     result = push_to_results_array(result, warnmsg)
     return result
@@ -741,11 +745,9 @@ def get_dynamical_spectrum(
         elif not math.isclose(dt, lc.dt, abs_tol=0.001):
             warnmsg = ["@WARN@Overriden Bin Size: " + str(lc.dt)]
 
-        # Prepares GTI if passed
-        gti = load_gti_from_destination(gti_destination)
-        if not gti:
-            logging.debug("External GTIs not loaded using defaults")
-            gti = lc.gti
+        # The lightcurve already carries source/external/time-filter intersections
+        # in the same relative time frame as its samples.
+        gti = lc.gti
 
         # Check if there is only one GTI and tries to split it by segm_size
         if gti is not None and len(gti) == 1:
@@ -874,11 +876,7 @@ def get_cross_spectrum(
         if not lc1:
             return common_error("Cant create lightcurve 1")
 
-        # Prepares GTI1 if passed
-        gti1 = load_gti_from_destination(gti_destination1)
-        if not gti1:
-            logging.debug("External GTIs 1 not loaded using defaults")
-            gti1 = lc1.gti
+        gti1 = lc1.gti
 
         # Creates the lightcurve 2
         lc2 = get_lightcurve_any_dataset(
@@ -887,11 +885,7 @@ def get_cross_spectrum(
         if not lc2:
             return common_error("Cant create lightcurve 2")
 
-        # Prepares GTI2 if passed
-        gti2 = load_gti_from_destination(gti_destination2)
-        if not gti2:
-            logging.debug("External GTIs 2 not loaded using defaults")
-            gti2 = lc2.gti
+        gti2 = lc2.gti
 
         # Join gtis in one gti
         gti = None
@@ -899,6 +893,8 @@ def get_cross_spectrum(
         gti2_valid = gti2 is not None and len(gti2) > 0
         if gti1_valid and gti2_valid:
             gti = cross_two_gtis(gti1, gti2)
+            if len(gti) == 0:
+                return common_warn("The selected lightcurves have no overlapping GTIs")
             logging.debug("GTIS crossed")
         elif gti1_valid and not gti2_valid:
             gti = gti1
@@ -1316,14 +1312,16 @@ def get_rms_spectrum(
         if segm_size == 0:
             segm_size = None
 
-        # Prepares GTI if passed
-        base_gti = load_gti_from_destination(gti_destination)
-
         filters = FltHelper.get_filters_clean_color_filters(filters)
 
         filtered_ds = get_filtered_dataset(src_destination, filters, gti_destination)
 
         if DsHelper.is_events_dataset(filtered_ds):
+            base_gti = DsHelper.get_stingray_gti_from_gti_table(filtered_ds.tables["GTI"])
+            if pds_type == "Sng" and len(base_gti) > 1:
+                return common_warn(
+                    "Single power spectra require one continuous GTI; choose averaged spectra."
+                )
             events_table = filtered_ds.tables["EVENTS"]
             if len(events_table.columns[CONFIG.TIME_COLUMN].values) > 0:
                 min_time = events_table.columns[CONFIG.TIME_COLUMN].values[0]
@@ -1376,7 +1374,9 @@ def get_rms_spectrum(
                             ]
                             if len(filtered_event_list) > 0:
                                 evt_list = EventList(
-                                    filtered_event_list[:, 0], pi=filtered_event_list[:, 1]
+                                    filtered_event_list[:, 0],
+                                    pi=filtered_event_list[:, 1],
+                                    gti=base_gti,
                                 )
                                 if evt_list and evt_list.ncounts > 1:
                                     if (
@@ -1384,9 +1384,7 @@ def get_rms_spectrum(
                                     ) >= dt:
                                         lc = evt_list.to_lc(dt)
                                         if lc and np.sqrt(lc.meancounts * lc.meancounts) > 0:
-                                            gti = base_gti
-                                            if not gti:
-                                                gti = lc.gti
+                                            gti = lc.gti
 
                                             if segm_size is not None and segm_size > lc.tseg:
                                                 segm_size = lc.tseg
@@ -1559,14 +1557,12 @@ def get_rms_vs_countrate(
         if len(axis) != 2:
             return common_error("Wrong number of axis")
 
-        # Prepares GTI if passed
-        base_gti = load_gti_from_destination(gti_destination)
-
         filters = FltHelper.get_filters_clean_color_filters(filters)
 
         filtered_ds = get_filtered_dataset(src_destination, filters, gti_destination)
 
         if DsHelper.is_events_dataset(filtered_ds):
+            base_gti = DsHelper.get_stingray_gti_from_gti_table(filtered_ds.tables["GTI"])
             events_table = filtered_ds.tables["EVENTS"]
             if len(events_table.columns[CONFIG.TIME_COLUMN].values) > 0:
                 min_time = events_table.columns[CONFIG.TIME_COLUMN].values[0]
@@ -1618,8 +1614,20 @@ def get_rms_vs_countrate(
                                 (time_high > event_list[:, 0]) & (event_list[:, 0] > time_low)
                             ]
                             if len(filtered_event_list) > 0:
+                                segment_gti = cross_two_gtis(
+                                    base_gti, np.array([[time_low, time_high]])
+                                )
+                                if len(segment_gti) == 0:
+                                    continue
+                                if len(segment_gti) > 1:
+                                    warning = "@WARN@Time segments crossing GTI gaps were skipped"
+                                    if warning not in warnmsg:
+                                        warnmsg.append(warning)
+                                    continue
                                 evt_list = EventList(
-                                    filtered_event_list[:, 0], pi=filtered_event_list[:, 1]
+                                    filtered_event_list[:, 0],
+                                    pi=filtered_event_list[:, 1],
+                                    gti=segment_gti,
                                 )
                                 if evt_list and evt_list.ncounts > 1:
                                     if (
@@ -1629,9 +1637,7 @@ def get_rms_vs_countrate(
                                         if lc and np.sqrt(lc.meancounts * lc.meancounts) > 0:
                                             rms, rms_err = 0, 0
 
-                                            gti = base_gti
-                                            if not gti:
-                                                gti = lc.gti
+                                            gti = lc.gti
 
                                             pds = Powerspectrum(lc, norm="frac", gti=gti)
                                             if pds:
@@ -2550,8 +2556,7 @@ def get_lightcurve_any_dataset(src_destination, bck_destination, gti_destination
     elif DsHelper.is_lightcurve_dataset(filtered_ds):
         # If dataset is LIGHTCURVE type
         logging.debug("Create lightcurve from lc dataset")
-        gti = load_gti_from_destination(gti_destination)
-        lc = DsHelper.get_lightcurve_from_lc_dataset(filtered_ds, gti=gti)
+        lc = DsHelper.get_lightcurve_from_lc_dataset(filtered_ds)
 
         # Applies background data if setted
         if bck_destination:
@@ -2742,11 +2747,8 @@ def create_power_density_spectrum(
         logging.warn("Can't create lightcurve or is empty")
         return None, None, None
 
-    # Prepares GTI if passed
-    gti = load_gti_from_destination(gti_destination)
-    if not gti:
-        logging.debug("External GTIs not loaded using defaults")
-        gti = lc.gti
+    # Filtering has already converted and intersected any external intervals.
+    gti = lc.gti
 
     # Creates the power density spectrum
     logging.debug("Create power density spectrum")
@@ -2757,8 +2759,12 @@ def create_power_density_spectrum(
         pds = AveragedPowerspectrum(lc=lc, segment_size=segm_size, norm=norm, gti=gti)
 
     if pds:
+        # Frequency rebinning also changes Stingray's m (powers averaged per
+        # frequency bin). Keep the original time-segment count for the UI.
+        segment_count = int(pds.m)
         if df > 0:
             pds = pds.rebin(df=df)
+        pds.dave_segment_count = segment_count
         # pds = rebin_spectrum_if_necessary(pds)
     else:
         logging.warn("Can't create power spectrum")
@@ -3012,7 +3018,7 @@ def get_divided_values_and_error(values_0, values_1, error_0, error_1):
 # Return the white_noise_offset automatically
 def get_white_noise_offset(event_arr, gti, dt, pds_type, segm_size, df):
     white_noise_offset = 0.0
-    evt_list = EventList(event_arr[:, 0], pi=event_arr[:, 1])
+    evt_list = EventList(event_arr[:, 0], pi=event_arr[:, 1], gti=gti)
     if (
         evt_list
         and evt_list.ncounts > 1
@@ -3020,7 +3026,7 @@ def get_white_noise_offset(event_arr, gti, dt, pds_type, segm_size, df):
     ):
         lc = evt_list.to_lc(dt)
         if lc and np.sqrt(lc.meancounts * lc.meancounts) > 0:
-            if not gti:
+            if gti is None:
                 gti = lc.gti
 
             if segm_size is not None and segm_size > lc.tseg:
@@ -3030,7 +3036,23 @@ def get_white_noise_offset(event_arr, gti, dt, pds_type, segm_size, df):
                 )
 
             pds = None
-            if pds_type == "Sng":
+            if pds_type == "Sng" and len(gti) > 1:
+                # Noise estimation pools contiguous segments instead of treating
+                # unobserved gaps as zero-count data in a single periodogram.
+                # Twelve bins provide at least five positive Fourier powers for
+                # the four-parameter Lorentzian-plus-constant fit.
+                complete_bins = np.floor((gti[:, 1] - gti[:, 0]) / lc.dt)
+                noise_gtis = gti[complete_bins >= 12]
+                if len(noise_gtis) == 0:
+                    raise ValueError("GTIs are too short to estimate white noise")
+                if len(noise_gtis) < len(gti):
+                    logging.warn("Skipping short GTI fragments during white-noise estimation")
+                noise_segment_size = np.min(complete_bins[complete_bins >= 12]) * lc.dt
+                logging.warn("Estimating white noise from averaged contiguous GTI segments")
+                pds = AveragedPowerspectrum(
+                    lc=lc, segment_size=noise_segment_size, norm="leahy", gti=noise_gtis
+                )
+            elif pds_type == "Sng":
                 pds = Powerspectrum(lc, norm="leahy", gti=gti)
             else:
                 pds = AveragedPowerspectrum(lc=lc, segment_size=segm_size, norm="leahy", gti=gti)

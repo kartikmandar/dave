@@ -23,9 +23,8 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             artifact_name: dave-linux
-          - os: macos-latest
-            platform: macos
-            artifact_name: dave-macos
+          # macOS distribution uses scripts/macos-release.py. Never publish the
+          # legacy, unsigned, development-environment-dependent macOS artifact.
           - os: windows-latest
             platform: windows
             artifact_name: dave-windows
@@ -117,7 +116,6 @@ jobs:
           
           ### Downloads
           - **Linux**: dave-linux.zip
-          - **macOS**: dave-macos.zip  
           - **Windows**: dave-windows.zip
           
           ### Installation
@@ -129,7 +127,8 @@ jobs:
           - Python 3.13+
           - 8GB RAM minimum
           - 10GB disk space
-        draft: false
+        # Publishing is a separate manual decision after release validation.
+        draft: true
         prerelease: false
         
     - name: Upload Linux Release Asset
@@ -140,16 +139,6 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./artifacts/release-dave-linux/dave-linux.zip
         asset_name: dave-linux.zip
-        asset_content_type: application/zip
-        
-    - name: Upload macOS Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./artifacts/release-dave-macos/dave-macos.zip
-        asset_name: dave-macos.zip
         asset_content_type: application/zip
         
     - name: Upload Windows Release Asset

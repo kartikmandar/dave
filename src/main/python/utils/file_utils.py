@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from security_config import SecurityConfig
 from werkzeug.datastructures import FileStorage
@@ -31,9 +32,11 @@ def get_destination(target, filename):
             # Import security utils
             from utils.security_utils import sanitize_path
 
-            if filename.startswith("/") and os.path.isfile(filename):
-                # Validate absolute path
-                sanitized = sanitize_path(filename, "/")
+            if os.path.isabs(filename) and os.path.isfile(filename):
+                # Desktop selections may use POSIX, drive-qualified or UNC
+                # paths. Confine the canonical path to its own filesystem root.
+                source_path = Path(filename).resolve()
+                sanitized = sanitize_path(str(source_path), source_path.anchor)
                 if sanitized:
                     return sanitized
                 else:

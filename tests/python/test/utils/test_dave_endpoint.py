@@ -205,15 +205,14 @@ def test_upload_of_already_present_file_reuses_it(client):
 def test_get_dataset_schema_describes_tables_and_columns(client):
     """The schema exposes each table's columns with counts and value ranges.
 
-    monol_testA.evt holds 1000 events; the reader's GTI slicing is
-    end-exclusive, so the event sitting on the GTI boundary is dropped and
-    999 remain.
+    monol_testA.evt holds 1000 events inside its GTI; import preserves all
+    of them, including the last valid event.
     """
     response = client.get("/get_dataset_schema", query_string={"filename": "monol_testA.evt"})
     assert response.status_code == 200
     schema = response.get_json()
     assert set(schema) == {"EVENTS", "GTI"}
-    assert schema["EVENTS"]["TIME"]["count"] == 999
+    assert schema["EVENTS"]["TIME"]["count"] == 1000
     assert schema["EVENTS"]["PI"]["min_value"] == 1
     assert schema["EVENTS"]["PI"]["max_value"] == 1022
 
@@ -359,7 +358,7 @@ def test_get_plot_data_returns_axis_columns_with_gtis(client):
     assert response.status_code == 200
     data = response.get_json()
     assert len(data) == 4
-    assert len(data[0]["values"]) == 999
+    assert len(data[0]["values"]) == 1000
 
 
 def test_get_plot_data_from_models_evaluates_each_model_and_the_sum(client):
@@ -387,8 +386,7 @@ def test_get_plot_data_from_models_evaluates_each_model_and_the_sum(client):
 
 def test_get_lightcurve_conserves_event_counts(client):
     """The binned light curve holds the events of the file: sum(rate)*dt
-    equals the number of events inside the GTI (999 of the 1000 events;
-    the one on the GTI boundary is dropped by the end-exclusive slicing)."""
+    equals all 1000 events inside the GTI."""
     response = client.post(
         "/get_lightcurve",
         json={
@@ -406,7 +404,7 @@ def test_get_lightcurve_conserves_event_counts(client):
     data = response.get_json()
     assert len(data) == 23  # fixed result layout: time..warnmsg
     assert len(data[0]["values"]) == 64  # 1024 s of data in 16 s bins
-    assert sum(data[1]["values"]) * 16.0 == pytest.approx(999.0, abs=0.5)
+    assert sum(data[1]["values"]) * 16.0 == pytest.approx(1000.0, abs=0.5)
     assert data[3]["values"] == [0.0]  # GTI start (TSTART-relative)
     assert data[4]["values"] == [1025.0]  # GTI stop
 

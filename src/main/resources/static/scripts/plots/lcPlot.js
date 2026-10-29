@@ -183,7 +183,7 @@ function LcPlot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPlotR
                                 plotDefaultConfig.EXTRA_DATA_COLOR, plotDefaultConfig.DEFAULT_LINE_WIDTH.default);
       if (this.extraData.length > 2
           && this.extraData[2].length > 0
-          && jQuery.isNumeric(this.extraData[2][0])) {
+          && isNumericValue(this.extraData[2][0])) {
             //If third extra data column is numeric set is as y_error
             extraTrace.error_y = getErrorConfig(this.extraData[2], plotDefaultConfig);
       }

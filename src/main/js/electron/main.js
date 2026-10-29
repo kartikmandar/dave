@@ -12,7 +12,7 @@ const updater = require('./updater');
 logger.section('DAVE Application Startup');
 
 // Security: Set up Electron fuses for enhanced security
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production' && !app.isPackaged) {
   const { FusesPlugin } = require('@electron-forge/plugin-fuses');
   const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
@@ -106,10 +106,10 @@ app.whenReady().then(async () => {
   createMainWindow();
 
   // Initialize auto-updater
-  updater.init();
+  if (!app.isPackaged) updater.init();
 
   // Check for updates
-  if (process.env.NODE_ENV !== 'development') {
+  if (!app.isPackaged && process.env.NODE_ENV !== 'development') {
     autoUpdater.checkForUpdatesAndNotify();
   }
 
@@ -151,7 +151,7 @@ ipcMain.handle('server:launch', async () => {
   try {
     // Check if we're in test mode
     const isTestMode = process.env.DAVE_TEST_MODE === 'true';
-    
+
     if (isTestMode) {
       // In test mode, server should already be running from test setup
       log.info('Test mode detected - checking for existing server...');
@@ -201,6 +201,7 @@ ipcMain.handle('server:relaunch', async () => {
 ipcMain.handle('server:status', () => ({
   connected,
   processRunning,
+  pid: subpy ? subpy.pid : null,
   url: PYTHON_URL
 }));
 
@@ -278,13 +279,36 @@ async function loadConfig() {
 
     // Disable Python server startup in test mode
     const isTestMode = process.env.DAVE_TEST_MODE === 'true';
+    if (app.isPackaged) {
+      const dataDirectory = app.getPath('userData');
+      await fs.mkdir(dataDirectory, { recursive: true });
+      const runtime = await require('./bundled-runtime').prepareRuntime(process.resourcesPath, dataDirectory);
+      const net = require('net');
+      const port = await new Promise((resolve, reject) => {
+        const socket = net.createServer();
+        socket.once('error', reject);
+        socket.listen(0, '127.0.0.1', () => {
+          const assigned = socket.address().port;
+          socket.close(() => resolve(assigned));
+        });
+      });
+      return {
+        pythonEnabled: true, envEnabled: false,
+        pythonExecutable: path.join(runtime, 'bin/python'),
+        pythonPath: path.join(process.resourcesPath, 'python/server.py'),
+        pythonUrl: `http://127.0.0.1:${port}`,
+        dataDirectory, runtime,
+        splash_path: path.join(process.resourcesPath, 'resources/templates/splash_page.html')
+      };
+    }
+
     
     return {
       envEnabled: config.environment?.enabled === "true" && !isTestMode,
       envScriptPath: path.join(__dirname, config.environment?.path || ''),
       pythonEnabled: config.python?.enabled === "true" && !isTestMode,
       pythonPath: path.join(__dirname, config.python?.path || ''),
-      pythonUrl: config.python?.url || 'http://localhost:5001',
+      pythonUrl: (isTestMode && process.env.PYTHON_URL) || config.python?.url || 'http://localhost:5001',
       logDebugMode: config.logDebugMode === "true",
       splash_path: config.splash_path || '/../../resources/templates/splash_page.html',
       logsPath: config.logsPath || path.join(app.getPath('logs'), 'dave.log')
@@ -316,6 +340,22 @@ async function launchPythonServer(config) {
   };
 
   if (config.pythonEnabled) {
+    if (config.pythonExecutable) {
+      for (const key of Object.keys(spawnOptions.env)) {
+        if (/^(PYTHON|CONDA|PIXI|VIRTUAL_ENV|DYLD_)/.test(key)) delete spawnOptions.env[key];
+      }
+      Object.assign(spawnOptions.env, {
+        PATH: path.join(config.runtime, 'bin') + ':/usr/bin:/bin',
+        DAVE_DATA_DIR: config.dataDirectory, MPLBACKEND: 'Agg',
+        NUMBA_CACHE_DIR: path.join(config.dataDirectory, 'numba-cache'),
+        MPLCONFIGDIR: path.join(config.dataDirectory, 'matplotlib')
+      });
+      spawnOptions.cwd = config.dataDirectory;
+      return launchProcess(config.pythonExecutable,
+        ['-E', '-s', '-X', 'pycache_prefix=' + path.join(config.dataDirectory, 'pycache'),
+          config.pythonPath, config.dataDirectory, path.dirname(config.pythonPath), port, app.getVersion()],
+        'Python', spawnOptions);
+    }
     return launchProcess('python', [config.pythonPath, '.', '.', port], 'Python', spawnOptions);
   } else if (config.envEnabled) {
     return launchProcess('/bin/bash', [config.envScriptPath], 'Environment', spawnOptions);
@@ -484,7 +524,7 @@ function createMainWindow() {
 
   // Load splash screen
   const splashPath = mainConfig.splash_path || '/../../resources/templates/splash_page.html';
-  mainWindow.loadFile(path.join(__dirname, splashPath));
+  mainWindow.loadFile(app.isPackaged ? splashPath : path.join(__dirname, splashPath));
 
   // Set up event handlers
   mainWindow.on('closed', () => {

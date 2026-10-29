@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 // Channel whitelist for security - using Object.freeze to prevent iteration issues
 const validChannels = Object.freeze({
@@ -56,6 +56,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // App information
   getVersion: () => ipcRenderer.invoke('app:getVersion'),
   getConfig: () => ipcRenderer.invoke('app:getConfig'),
+  getPathForFile: (file) => webUtils.getPathForFile(file),
   
   // Server management
   server: {

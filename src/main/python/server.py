@@ -7,7 +7,7 @@ import matplotlib
 from flask import Flask, Response, jsonify, render_template, request
 from flask.json.provider import DefaultJSONProvider
 
-matplotlib.use("TkAgg")  # Changes the matplotlib framework
+matplotlib.use(os.environ.get("MPLBACKEND", "TkAgg"))
 
 import random
 
@@ -56,7 +56,7 @@ app = Flask(
 )
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-UPLOADS_TARGET = os.path.join(APP_ROOT, "uploadeddataset")
+UPLOADS_TARGET = os.path.join(os.environ.get("DAVE_DATA_DIR", APP_ROOT), "uploadeddataset")
 
 
 # Apply security configuration

@@ -28,7 +28,7 @@ class ServerSentEvent:
 
 
 def start(server_port, app):
-    server = WSGIServer(("", server_port), app)
+    server = WSGIServer(("127.0.0.1", server_port), app)
     try:
         print(f"Starting server on port {server_port}")
         server.serve_forever()

@@ -130,7 +130,7 @@ function AgnPlot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPlot
   this.saveAsCSV = function () {
     var data = currentObj.data;
     if (!isNull(data)){
-      var csvContent = "data:text/csv;charset=utf-8,";
+      var csvContent = "";
       data[0].values.forEach(function(values, index){
         var infoArray = [];
         for (col = 0; col < data.length; col++) {
@@ -139,7 +139,7 @@ function AgnPlot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPlot
         dataString = Array.prototype.join.call(infoArray, ",");
         csvContent += index < data[0].values.length ? dataString + "\n" : dataString;
       });
-      saveRawToFile(currentObj.getTitle() + ".csv", encodeURI(csvContent));
+      saveRawToFile(currentObj.getTitle() + ".csv", csvContent);
     }
   }
 

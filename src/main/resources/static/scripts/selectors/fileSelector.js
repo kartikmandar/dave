@@ -50,7 +50,14 @@ function fileSelector(id, label, selectorKey, uploadFn, onFileChangedFn) {
          waitingDialog.show('Uploading files...');
        }
 
-       if (isNull(this.files[0].path) || !CONFIG.IS_LOCAL_SERVER) {
+       var selectedPaths = Array.from(this.files, function (file) {
+         if (window.electronAPI && typeof window.electronAPI.getPathForFile === 'function') {
+           return window.electronAPI.getPathForFile(file);
+         }
+         return file.path || '';
+       });
+
+       if (!CONFIG.IS_LOCAL_SERVER || selectedPaths.some(function (filePath) { return !filePath; })) {
 
          // If path is null is beacause we are running on a NON electron browser,
          // or if server is on remote configuration, then we have to use the upload
@@ -96,10 +103,7 @@ function fileSelector(id, label, selectorKey, uploadFn, onFileChangedFn) {
         if (!hasBulkFile) {
 
           //Server is local, and path is defined by electron runtime environment
-          filenames = jQuery.map( this.files, function( file, i ) {
-            //If normal file, just returns the absolute path
-            return file.path;
-           });
+          var filenames = selectedPaths;
 
            currentObj.onUploadSuccess(filenames);
            currentObj.onFileChangedFn(filenames, currentObj.selectorKey);

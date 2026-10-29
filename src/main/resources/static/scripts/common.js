@@ -5,6 +5,20 @@ function isNull (value) {
   return (value === undefined) || (value == null);
 }
 
+// Numeric data may be numbers or decimal/scientific strings. Do not coerce
+// blanks, booleans or hexadecimal strings into scientific parameter values.
+function isNumericValue(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value);
+  }
+  if (typeof value !== "string") {
+    return false;
+  }
+  var text = value.trim();
+  return /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text)
+    && Number.isFinite(Number(text));
+}
+
 function isInt(n) {
    return n % 1 === 0;
 }
@@ -139,7 +153,7 @@ function extractDatafromCSVContents(contents) {
           lineData = [];
           for (j in strData){
             var value = strData[j].trim();
-            if (jQuery.isNumeric(value)){
+            if (isNumericValue(value)){
               value = parseFloat(value);
             }
             lineData.push(value);
@@ -236,11 +250,7 @@ function saveToFile (filename, contents) {
 }
 
 function saveRawToFile(filename, text) {
-  var encodedUri = encodeURI(text);
-  var link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", filename);
-  link.click();
+  return saveToFile(filename, text);
 }
 
 function showLoadFile(onLoadFn, fileExtension) {

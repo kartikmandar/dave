@@ -469,11 +469,11 @@ function Plot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPlotRea
      }
      if (this.extraData.length > 2
          && this.extraData[2].length > 0
-         && jQuery.isNumeric(this.extraData[2][0])) {
+         && isNumericValue(this.extraData[2][0])) {
            //If third extra data column is numeric
            if (this.extraData.length > 3
                && this.extraData[3].length > 0
-               && jQuery.isNumeric(this.extraData[3][0])) {
+               && isNumericValue(this.extraData[3][0])) {
                  //If fourth extra data column is numeric also, consider both columns as errors
                  var error_coords = this.getSwitchedCoords( { x: this.extraData[2], y: this.extraData[3]} );
                  extraTrace.error_x = getErrorConfig(error_coords.x, plotDefaultConfig);
@@ -994,7 +994,7 @@ function Plot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPlotRea
   this.saveAsCSV = function () {
     var data = currentObj.data;
     if (!isNull(data)){
-      var csvContent = "data:text/csv;charset=utf-8,";
+      var csvContent = "";
 
       //Prepares annotations for export, gets the closest index for each annotation
       var annotations = [];
@@ -1015,7 +1015,8 @@ function Plot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPlotRea
              infoArray.push(data[axis].error_values[index]); //Adds X, Y errors if available
            }
          }
-         if (data.length > 2 && (data[1].values.length == data[2].values.length)) {
+         if (isNull(data[1].error_values)
+             && data.length > 2 && (data[1].values.length == data[2].values.length)) {
            infoArray.push(data[2].values[index]); //Adds errors or extra data if available
          }
          //Adds the annotation text if exists as last column
@@ -1058,7 +1059,7 @@ function Plot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPlotRea
 
       for (i in annotationsArr){
         var text = annotationsArr[i];
-        if (text != "" && !jQuery.isNumeric(text)){
+        if (text != "" && !isNumericValue(text)){
           //Add annotations from extraData
           var annotation = getAnnotation(text.replace(/\'/g,''),
                                          this.extraData[0][i],

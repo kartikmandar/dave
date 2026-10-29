@@ -39,6 +39,26 @@ jobs:
       
     - name: Install Playwright browsers
       run: pixi run test-e2e-install
+
+    - name: Run browser regression tests
+      run: pixi run test-browser
+
+    - name: Validate Electron scientific workflow (Linux)
+      if: runner.os == 'Linux'
+      run: xvfb-run -a pixi run test-workflow
+
+    - name: Validate Electron scientific workflow (macOS and Windows)
+      if: runner.os != 'Linux'
+      run: pixi run test-workflow
+
+    - name: Upload Electron workflow evidence
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: electron-workflow-${{ matrix.os }}
+        path: tests/test-results/workflow/
+        if-no-files-found: ignore
+        retention-days: 14
       
     - name: Run E2E tests
       run: pixi run test-e2e

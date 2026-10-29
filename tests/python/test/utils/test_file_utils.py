@@ -7,6 +7,7 @@ from hypothesis.strategies import text
 from werkzeug.datastructures import FileStorage
 
 import utils.file_utils as FileUtils
+from config import CONFIG
 from test.fixture import TEST_RESOURCES
 
 
@@ -56,6 +57,43 @@ def test_get_destination():
     except Exception:
         # Function may throw exception for None input, which is acceptable
         assert True
+
+
+def test_local_absolute_source_outside_uploads_is_resolved_on_the_native_platform(
+    tmp_path, monkeypatch
+):
+    """Native file selections stay usable without copying them into uploads.
+
+    On Windows tmp_path has a real drive-qualified path, exercising the same
+    branch as the desktop chooser without emulating Windows paths on POSIX.
+    """
+    uploads = tmp_path / "uploads"
+    uploads.mkdir()
+    source_dir = tmp_path / "science data"
+    source_dir.mkdir()
+    source = source_dir / "observation.evt"
+    source.write_bytes(b"fixture")
+    assert source.is_absolute()
+    assert not source.is_relative_to(uploads)
+
+    monkeypatch.setattr(CONFIG, "IS_LOCAL_SERVER", True)
+    destination = FileUtils.get_destination(str(uploads), str(source))
+    assert destination == str(source.resolve())
+    assert FileUtils.file_exist(str(uploads), str(source))
+
+
+def test_remote_absolute_source_is_confined_to_uploads(tmp_path, monkeypatch):
+    """Upload mode must never resolve a desktop path outside its target."""
+    uploads = tmp_path / "uploads"
+    uploads.mkdir()
+    source = tmp_path / "observation.evt"
+    source.write_bytes(b"fixture")
+
+    monkeypatch.setattr(CONFIG, "IS_LOCAL_SERVER", False)
+    destination = FileUtils.get_destination(str(uploads), str(source))
+    assert os.path.commonpath((str(uploads.resolve()), destination)) == str(uploads.resolve())
+    assert destination != str(source.resolve())
+    assert not FileUtils.file_exist(str(uploads), str(source))
 
 
 def test_file_exist():

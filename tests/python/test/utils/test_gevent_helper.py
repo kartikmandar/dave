@@ -8,6 +8,8 @@ never wall-clock sleeps.
 
 import gevent
 import pytest
+from gevent import socket
+from gevent.event import Event
 
 import utils.gevent_helper as GeHelper
 
@@ -131,7 +133,7 @@ def test_start_swallows_keyboard_interrupt_and_closes_server(stub_server):
     stub_server.serve_error = KeyboardInterrupt
     GeHelper.start(5432, app="the-app")
     (server,) = stub_server.instances
-    assert server.listener == ("", 5432)
+    assert server.listener == ("127.0.0.1", 5432)
     assert server.app == "the-app"
     assert server.closed is True
 
@@ -143,3 +145,45 @@ def test_start_reraises_unexpected_errors_but_still_closes(stub_server):
         GeHelper.start(5432, app="the-app")
     (server,) = stub_server.instances
     assert server.closed is True
+
+
+def test_start_serves_http_on_an_ephemeral_loopback_socket(monkeypatch):
+    """The actual listening socket stays on loopback and serves the app."""
+    listening = Event()
+    servers = []
+    real_server_class = GeHelper.WSGIServer
+
+    class ObservedWSGIServer(real_server_class):
+        def start(self):
+            super().start()
+            listening.set()
+
+    def create_server(listener, app):
+        server = ObservedWSGIServer(listener, app, log=None)
+        servers.append(server)
+        return server
+
+    def application(environ, start_response):
+        start_response("200 OK", [("Content-Type", "text/plain"), ("Content-Length", "7")])
+        return [b"healthy"]
+
+    monkeypatch.setattr(GeHelper, "WSGIServer", create_server)
+    serving = gevent.spawn(GeHelper.start, 0, application)
+    try:
+        assert listening.wait(timeout=5), "The test server did not start"
+        (server,) = servers
+        host, port = server.socket.getsockname()[:2]
+        assert host == "127.0.0.1"
+        assert port > 0
+
+        with socket.create_connection((host, port), timeout=5) as connection:
+            connection.sendall(b"GET /health HTTP/1.0\r\nHost: localhost\r\n\r\n")
+            with connection.makefile("rb") as response:
+                assert response.readline().startswith(b"HTTP/1.1 200")
+                headers, body = response.read().split(b"\r\n\r\n", 1)
+                assert b"Content-Type: text/plain" in headers
+                assert body == b"healthy"
+    finally:
+        serving.kill(block=True)
+
+    assert servers[0].closed

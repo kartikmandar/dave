@@ -276,7 +276,8 @@ function PDSPlot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPlot
     var tab = getTabForSelector(this.id);
     if (!isNull(tab)) {
       this.plotConfig.maxSegmentSize = !isNull(this.plotConfig.zAxisType) ? tab.projectConfig.maxSegmentSize / 2 : tab.projectConfig.maxSegmentSize;
-      this.plotConfig.segment_size = !isNull(this.segmSelector) ? Math.min(this.segmSelector.value, this.plotConfig.maxSegmentSize) : this.plotConfig.maxSegmentSize / CONFIG.DEFAULT_SEGMENT_DIVIDER;
+      var segmentSize = !isNull(this.segmSelector) ? this.segmSelector.value : this.plotConfig.segment_size;
+      this.plotConfig.segment_size = segmentSize > 0 ? Math.min(segmentSize, this.plotConfig.maxSegmentSize) : this.plotConfig.maxSegmentSize / CONFIG.DEFAULT_SEGMENT_DIVIDER;
       this.updateNSegm();
     } else {
       log("UpdatePlotConfig plot data " + this.id + " error: Tab not found for plot id");
@@ -301,6 +302,12 @@ function PDSPlot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPlot
 
       this.updateDuration(data[2].values);
       this.updateSettings();
+      if (Number.isFinite(data[1].n_segments)) {
+        this.plotConfig.nsegm = data[1].n_segments;
+        if (!isNull(this.segmSelector)) {
+          this.updateSegmSelector();
+        }
+      }
 
     } else {
       this.showWarn("Wrong data received");

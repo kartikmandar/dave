@@ -12,6 +12,7 @@ function OutputPanel (id, classSelector, container, service, onFiltersChangedFro
   this.$html.show();
   this.$body =  this.$html.find(".outputPanelBody");
   this.plots = [];
+  this.plotCounter = 0;
 
   //METHODS AND EVENTS
   this.resize = function() {
@@ -73,7 +74,8 @@ function OutputPanel (id, classSelector, container, service, onFiltersChangedFro
   }
 
   this.generatePlotId = function (id) {
-    return (this.id + "_" + id.replace(/[^\w]/g,'') + "_" + (new Date()).getTime()).replace(/\./g,'').replace(/\//g,'');
+    this.plotCounter += 1;
+    return (this.id + "_" + id.replace(/[^\w]/g,'') + "_" + (new Date()).getTime() + "_" + this.plotCounter).replace(/\./g,'').replace(/\//g,'');
   }
 
   this.broadcastEvent = function (evt_name, evt_data, senderId) {

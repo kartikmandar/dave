@@ -124,12 +124,11 @@ def test_get_file_dataset_returns_cached_dataset_on_second_call(no_magic):
 def test_get_file_dataset_reads_events_fits(no_magic):
     """An EVENTS FITS file yields EVENTS+GTI tables with TSTART recorded.
 
-    999 of the 1000 events survive: the GTI slicing is end-exclusive, so the
-    event on the GTI boundary is dropped.
+    All 1000 events inside the GTI survive, including the last valid event.
     """
     dataset, _ = DaveReader.get_file_dataset(_data("monol_testA.evt"))
     assert set(dataset.tables) == {"EVENTS", "GTI"}
-    assert len(dataset.tables["EVENTS"].columns["TIME"].values) == 999
+    assert len(dataset.tables["EVENTS"].columns["TIME"].values) == 1000
     assert dataset.tables["EVENTS"].columns["TIME"].get_extra("TSTART") == 80000000.0
     # Times are stored relative to TSTART.
     assert dataset.tables["EVENTS"].columns["TIME"].values[0] < 1.0

@@ -201,10 +201,13 @@ function makeTabCallbackFunc (tabConfig) {
 
               if (tabConfig.type == "CONFIG") {
 
-                //Sets general configuration
-                delete tabConfig.type;
-                $.extend (CONFIG, tabConfig);
-                callback();
+                // Restore analysis preferences, keeping this application's
+                // current backend address rather than a previous session's URL.
+                var savedConfig = $.extend({}, tabConfig);
+                delete savedConfig.type;
+                delete savedConfig.DOMAIN_URL;
+                $.extend(CONFIG, savedConfig);
+                updateServerConfig(callback);
 
               } else {
 
@@ -215,9 +218,11 @@ function makeTabCallbackFunc (tabConfig) {
                     tab.setConfig(tabConfig, callback);
                   } else {
                     showError("Error loading tab: " + tabConfig.id, null, { ignoreCalls: true });
+                    callback(new Error("Error loading tab: " + tabConfig.id));
                   }
                 } else {
                   showError("Error tab type not subscribed: " + tabConfig.type, null, { ignoreCalls: true });
+                  callback(new Error("Error tab type not subscribed: " + tabConfig.type));
                 }
 
               }

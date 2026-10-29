@@ -3,7 +3,7 @@ import bisect
 import numpy as np
 from stingray import Lightcurve
 from stingray.events import EventList
-from stingray.gti import gti_len, join_gtis
+from stingray.gti import cross_two_gtis, gti_len, join_gtis
 
 import utils.dave_logger as logging
 from config import CONFIG
@@ -58,9 +58,15 @@ def get_lightcurve_from_lc_dataset(dataset, gti=None):
     counts = np.array(dataset.tables["RATE"].columns["RATE"].values)
     err_counts = np.array(dataset.tables["RATE"].columns["RATE"].error_values)
 
+    if len(time_data) == 0:
+        return None
+
     # Extract GTIs
-    if not gti:
+    if gti is None:
         gti = get_stingray_gti_from_gti_table(dataset.tables["GTI"])
+    elif len(gti) == 0:
+        # An explicit empty selection must not restore the full observation.
+        return None
 
     # Returns the EventList
     if len(gti) > 0:
@@ -287,9 +293,9 @@ def get_columns_errors_as_dict(columns, column):
 def get_dataset_applying_gti_dataset(
     src_dataset, gti_dataset, hduname="EVENTS", column=CONFIG.TIME_COLUMN
 ):
-    if not is_events_dataset(src_dataset):
+    if not (is_events_dataset(src_dataset) or is_lightcurve_dataset(src_dataset)):
         logging.warn(
-            "get_dataset_applying_gti_dataset: src_dataset is not a events dataset instance"
+            "get_dataset_applying_gti_dataset: src_dataset is not an events or lightcurve dataset"
         )
         return None
 
@@ -297,7 +303,10 @@ def get_dataset_applying_gti_dataset(
         logging.warn("get_dataset_applying_gti_dataset: gti_dataset is not a gti dataset instance")
         return None
 
-    # Creates the new dataset
+    if hduname == "EVENTS" and is_lightcurve_dataset(src_dataset):
+        hduname = "RATE"
+
+    # Clone metadata while rebuilding only the selected rows and intervals.
     dataset = src_dataset.clone(False)
     additional_columns = get_additional_column_names(dataset.tables[hduname].columns, column)
     hdu_table = src_dataset.tables[hduname]
@@ -308,13 +317,21 @@ def get_dataset_applying_gti_dataset(
     ds_columns = get_columns_as_dict(src_dataset.tables[hduname].columns, column)
     ds_columns_errors = get_columns_errors_as_dict(src_dataset.tables[hduname].columns, column)
 
-    # Gets start time of observation
-    events_start_time = 0
-    if "TSTART" in hdu_table.header:
-        events_start_time = float(hdu_table.header["TSTART"])
-
-    gti_start = st_gtis[:, 0] - events_start_time
-    gti_end = st_gtis[:, 1] - events_start_time
+    # GTI-only FITS inputs carry absolute mission times. Source times and
+    # source GTIs have already had their recorded observation origin removed.
+    time_column = hdu_table.columns[column]
+    events_start_time = float(
+        time_column.get_extra("TSTART")
+        if time_column.has_extra("TSTART")
+        else hdu_table.header.get("TSTART", 0)
+    )
+    st_gtis = _merge_gti_intervals(st_gtis[:, 0], st_gtis[:, 1]) - events_start_time
+    source_gtis = get_stingray_gti_from_gti_table(src_dataset.tables["GTI"])
+    source_gtis = _merge_gti_intervals(source_gtis[:, 0], source_gtis[:, 1])
+    if len(st_gtis) and len(source_gtis):
+        st_gtis = np.asarray(cross_two_gtis(source_gtis, st_gtis)).reshape(-1, 2)
+    else:
+        st_gtis = np.empty((0, 2))
 
     update_dataset_filtering_by_gti(
         dataset.tables[hduname],
@@ -323,12 +340,25 @@ def get_dataset_applying_gti_dataset(
         ev_list_err,
         ds_columns,
         ds_columns_errors,
-        gti_start,
-        gti_end,
+        st_gtis[:, 0],
+        st_gtis[:, 1],
         additional_columns,
         column,
     )
     return dataset
+
+
+def _merge_gti_intervals(gti_start, gti_end):
+    """Order GTIs and unite overlaps/touching edges so rows are never repeated."""
+    intervals = []
+    for start, end in sorted(zip(gti_start, gti_end, strict=True)):
+        if not np.isfinite(start) or not np.isfinite(end) or end < start:
+            raise ValueError("GTIs must have finite, ordered start/stop times")
+        if intervals and start <= intervals[-1][1]:
+            intervals[-1][1] = max(intervals[-1][1], end)
+        else:
+            intervals.append([start, end])
+    return np.asarray(intervals).reshape(-1, 2)
 
 
 # Returns a Dataset filtered by Gtis
@@ -347,66 +377,35 @@ def update_dataset_filtering_by_gti(
     filter_end=None,
     must_filter=False,
 ):
-    start_event_idx = 0
-    end_event_idx = 0
-
-    for gti_index in range(len(gti_start)):
-        start = gti_start[gti_index]
-        end = gti_end[gti_index]
-
-        is_valid_gti = True
+    # Events exactly at either endpoint are included, matching DAVE's range
+    # filters. A right insertion point supplies the exclusive Python slice end.
+    for start, end in _merge_gti_intervals(gti_start, gti_end):
         if must_filter:
-            is_valid_gti = (filter_start <= start) and (filter_end >= end)
-            if not is_valid_gti:
-                if (filter_start < end) and (filter_end > end):
-                    start = filter_start
-                    is_valid_gti = True
-                elif (filter_start < start) and (filter_end > start):
-                    end = filter_end
-                    is_valid_gti = True
-                elif (filter_start >= start) and (filter_end <= end):
-                    start = filter_start
-                    end = filter_end
-                    is_valid_gti = True
+            start = max(start, filter_start)
+            end = min(end, filter_end)
+        if start > end:
+            continue
 
-        if is_valid_gti:
-            start_event_idx = find_idx_nearest_val(ev_list, start)
-            if ev_list[start_event_idx] < start and start_event_idx < len(ev_list) - 1:
-                start_event_idx = start_event_idx + 1
+        start_event_idx = bisect.bisect_left(ev_list, start)
+        stop_event_idx = bisect.bisect_right(ev_list, end)
 
-            end_event_idx = find_idx_nearest_val(ev_list, end)
-            if ev_list[end_event_idx] > end and end_event_idx > 0:
-                end_event_idx = end_event_idx - 1
+        # Zero detected photons do not remove valid observing exposure.
+        gti_table.columns["START"].add_value(start)
+        gti_table.columns["STOP"].add_value(end)
+        gti_table.columns["START_EVENT_IDX"].add_value(start_event_idx)
+        gti_table.columns["END_EVENT_IDX"].add_value(stop_event_idx - 1)
 
-            if end_event_idx >= start_event_idx:
-                # The GTI has ended, so lets insert it on dataset
-
-                gti_table.columns["START"].add_value(start)
-                gti_table.columns["STOP"].add_value(end)
-                gti_table.columns["START_EVENT_IDX"].add_value(start_event_idx)
-                gti_table.columns["END_EVENT_IDX"].add_value(end_event_idx)
-
-                # Insert values at range on dataset
-                hdu_table.columns[column].add_values(
-                    ev_list[start_event_idx:end_event_idx],
-                    ev_list_err[start_event_idx:end_event_idx],
-                )
-                for i in range(len(additional_columns)):
-                    ad_column = additional_columns[i]
-                    values = np.nan_to_num(ds_columns[ad_column][start_event_idx:end_event_idx])
-                    error_values = []
-                    if (
-                        ad_column in ds_columns_errors
-                        and len(ds_columns_errors[ad_column]) > end_event_idx
-                    ):
-                        error_values = np.nan_to_num(
-                            ds_columns_errors[ad_column][start_event_idx:end_event_idx]
-                        )
-                    hdu_table.columns[ad_column].add_values(values, error_values)
-            else:
-                logging.info(
-                    f"No data point in GTI # {gti_index}: GTI (from, to)=({start:.6f}, {end:.6f}); event list (from, to)=({start_event_idx}, {end_event_idx})"
-                )
+        selected = slice(start_event_idx, stop_event_idx)
+        time_errors = ev_list_err[selected] if len(ev_list_err) == len(ev_list) else None
+        hdu_table.columns[column].add_values(ev_list[selected], time_errors)
+        for additional_column in additional_columns:
+            values = np.nan_to_num(ds_columns[additional_column][selected])
+            error_values = None
+            if additional_column in ds_columns_errors and len(
+                ds_columns_errors[additional_column]
+            ) == len(ev_list):
+                error_values = np.nan_to_num(ds_columns_errors[additional_column][selected])
+            hdu_table.columns[additional_column].add_values(values, error_values)
 
 
 # Returns a tuple with the counts and the key values

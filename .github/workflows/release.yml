@@ -20,9 +20,7 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             artifact_pattern: "*.AppImage"
-          - os: macos-latest
-            platform: macos
-            artifact_pattern: "*.dmg"
+          # Signed/notarized macOS ZIPs are prepared with scripts/macos-release.py.
           - os: windows-latest
             platform: windows
             artifact_pattern: "*.exe"

@@ -36,7 +36,7 @@ function getInputValue($input, type, defaultValue) {
         value = parseInt(textVal);
       }
 
-      if (jQuery.isNumeric(textVal) && !isNaN(value)) {
+      if (isNumericValue(textVal) && Number.isFinite(value)) {
         $input.removeClass("wrongValue");
         return value;
       } else {

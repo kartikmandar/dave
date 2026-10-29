@@ -748,10 +748,14 @@ function ToolPanel (id,
 
   this.setFilesOnFileSelector = function (selectorKey, filename, filenames, changedFn, callback) {
     var fileSelector = this.getFileSelector(selectorKey);
-    if (!isNull(fileSelector) && (filename != "")) {
-      fileSelector.onUploadSuccess([filename]);
-      filenames.splice(0, 0, filename);
-      changedFn(filenames, selectorKey, callback);
+    // Multi-file workspaces must rebuild the dataset from the original files;
+    // filename may refer to an old process's concatenated cache entry.
+    var sourceFiles = Array.isArray(filenames) && filenames.length > 0
+      ? filenames.slice()
+      : (typeof filename === "string" && filename !== "" ? [filename] : []);
+    if (!isNull(fileSelector) && sourceFiles.length > 0) {
+      fileSelector.onUploadSuccess(sourceFiles);
+      changedFn(sourceFiles, selectorKey, callback);
     } else {
       callback();
     }

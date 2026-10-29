@@ -282,8 +282,17 @@ function onServerMessageReceived (msg) {
   log("SERVER -> " + msg, cssClass);
 }
 
-function updateServerConfig(){
-  theService.set_config({ CONFIG: CONFIG }, function (res) {
+function updateServerConfig(onComplete){
+  var request = theService.set_config({ CONFIG: CONFIG }, function (res) {
     logInfo("Server configuration setted -> " + res);
   });
+  if (typeof onComplete === "function") {
+    request.done(function (response) {
+      onComplete(response && response.error ? new Error(response.error) : null);
+    }).fail(function (response) {
+      var details = response.responseJSON && response.responseJSON.error;
+      onComplete(new Error(details || "Could not restore server configuration"));
+    });
+  }
+  return request;
 }

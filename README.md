@@ -32,8 +32,20 @@ pixi run install-node-deps
 
 # Verify installation
 pixi run test                    # Python tests
-pixi run test-e2e               # End-to-end tests (requires pixi run test-e2e-install first)
+pixi run test-e2e-install        # Install browser and Electron test dependencies
+pixi run test-browser            # Numeric-control browser regressions (Chromium)
+pixi run test-workflow           # Electron import/analyze/export/workspace acceptance
+pixi run test-e2e               # Other Electron end-to-end checks
 ```
+
+The scientific workflow test drives the existing Electron controls through event
+import, a typed bin size, light-curve and averaged-PDS calculation, CSV export,
+and workspace save/reopen after restarting both Electron and Python. Its
+deterministic synthetic FITS file includes an observing gap and an injected
+signal. Numerical values and uncertainties are compared with direct Stingray
+calculations to an absolute tolerance of `1e-6`, matching DAVE's six-decimal API
+precision. Test artifacts include the reference, CSV files, saved workspace,
+and a screenshot. On headless Linux, run `xvfb-run -a pixi run test-workflow`.
 
 ### Running the Application
 
@@ -48,6 +60,43 @@ cd src/main/js/electron && npm start  # Electron frontend
 ```
 
 ## Architecture
+
+### Standalone macOS preview
+
+The native-architecture standalone build includes an expanded, immutable Python
+environment inside `DAVE.app`. It runs directly from the bundle without installing
+or rewriting executable files on first launch. Python, Pixi and Node are not
+required on the target Mac. Logs, uploads and scientific caches use writable
+application data directories rather than the app bundle.
+
+Build tools require Node 22 or 24 and `conda-pack==0.9.2`. With the locked Pixi
+environment and Electron dependencies installed:
+
+```bash
+python3 -m pip install --target build/macos-tools -r scripts/macos-build-requirements.txt
+PYTHONPATH=build/macos-tools .pixi/envs/default/bin/python scripts/build-standalone-macos.py --node /path/to/node24
+```
+
+Output: `build/standalone/DAVE-darwin-arm64/DAVE.app` on Apple Silicon
+(`darwin-x64` on Intel). This path builds a local preview without Developer ID
+signing or notarization. Automatic update checks are disabled for this preview.
+For Developer ID signing, notarization and public ZIP preparation, follow
+[the macOS distribution guide](docs/MACOS_DISTRIBUTION.md). Legacy CI jobs no
+longer publish macOS builds; the signing pipeline never publishes automatically.
+
+To validate a copy outside the checkout, the workflow harness accepts:
+
+```bash
+cd tests
+DAVE_PACKAGED_APP=/absolute/path/to/DAVE.app npm run test:workflow
+```
+
+The packaged test starts the app's own Python backend with a system-only PATH,
+an empty application profile, a read restriction on the checkout and Homebrew,
+and no external test server. The outer macOS sandbox requires disabling the
+nested Chromium sandbox for this isolation test only; normal app launches keep
+the existing Chromium settings. The test runner prepares the independent
+Stingray reference outside the app before applying these restrictions.
 
 DAVE uses a hybrid client-server architecture:
 

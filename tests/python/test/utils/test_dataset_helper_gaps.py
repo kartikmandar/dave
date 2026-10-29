@@ -39,7 +39,7 @@ def test_eventlist_uses_pi_when_pha_is_missing():
     dataset = _events_dataset()
     assert "PHA" not in dataset.tables["EVENTS"].columns
     events = DsHelper.get_eventlist_from_evt_dataset(dataset)
-    assert len(events.time) == 999
+    assert len(events.time) == 1000
     assert list(events.pi[:3]) == list(dataset.tables["EVENTS"].columns["PI"].values[:3])
     # The synthesized PHA column is flagged so it never leaks into schemas.
     assert dataset.tables["EVENTS"].columns["PHA"].has_extra("FAKE_COLUMN")
@@ -276,7 +276,7 @@ def test_get_columns_as_dict_and_errors():
     errors = DsHelper.get_columns_errors_as_dict(columns, "TIME")
     assert set(values) == set(errors)
     assert "TIME" not in values
-    assert len(values["PI"]) == 999
+    assert len(values["PI"]) == 1000
 
 
 # ---------- find_idx_nearest_val ----------
@@ -349,12 +349,12 @@ def test_apply_gti_dataset_restricts_events_to_absolute_window(gti_file_absolute
 
 def test_apply_gti_dataset_rejects_wrong_input_types(gti_file_absolute, rmf_file):
     """Both arguments are type checked before any filtering happens: the
-    source must be an events dataset and the filter must carry a GTI table
+    source must be an events/lightcurve dataset and the filter must carry a GTI table
     (an RMF dataset has none)."""
     source = _events_dataset()
     gti_dataset, _ = DaveReader.get_file_dataset(gti_file_absolute)
     rmf_dataset, _ = DaveReader.get_file_dataset(rmf_file)
-    assert DsHelper.get_dataset_applying_gti_dataset(_lc_dataset(), gti_dataset) is None
+    assert DsHelper.get_dataset_applying_gti_dataset(None, gti_dataset) is None
     assert DsHelper.get_dataset_applying_gti_dataset(source, rmf_dataset) is None
 
 
@@ -388,8 +388,8 @@ def test_update_dataset_filtering_by_gti_clamps_partial_overlaps():
     assert times.max() <= 60.0
 
 
-def test_update_dataset_filtering_by_gti_skips_gtis_without_events():
-    """A GTI falling between two events contributes no rows at all."""
+def test_update_dataset_filtering_by_gti_keeps_exposure_without_events():
+    """A GTI falling between events retains its exposure but contributes no rows."""
     hdu_table = DataSet.get_hdu_type_dataset("DS", ["TIME"], "EVENTS").tables["EVENTS"]
     gti_table = DsHelper.get_empty_gti_table()
     ev_list = np.arange(0.0, 100.0, 1.0)
@@ -406,5 +406,6 @@ def test_update_dataset_filtering_by_gti_skips_gtis_without_events():
         additional_columns=[],
     )
 
-    assert gti_table.columns["START"].values == []
+    assert gti_table.columns["START"].values == [40.2]
+    assert gti_table.columns["STOP"].values == [40.3]
     assert hdu_table.columns["TIME"].values == []
