@@ -36,12 +36,12 @@ async function main() {
     }
   }));
   console.log(`Signed ${native.length} native files; sealing app containers`);
-  const { signAsync } = resolveTool('@electron/osx-sign');
-  await signAsync({
+  const { sign } = resolveTool('@electron/osx-sign');
+  await sign({
     app, identity, platform: 'darwin', type: 'distribution', version: inspect().electronVersion,
     preAutoEntitlements: false, preEmbedProvisioningProfile: false, gatekeeperAssess: false,
     // Exclude data, Mach-O object fixtures and symlink aliases; sign actual code.
-    // Pass one predicate: osx-sign 1.3.x drops arrays in validateOptsIgnore.
+    // One predicate keeps the code/data distinction explicit.
     ignore: file => {
       if (fs.lstatSync(file).isSymbolicLink()) return true;
       if (file === app || /\.(app|framework)$/.test(file)) return false;

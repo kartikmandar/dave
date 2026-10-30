@@ -28,6 +28,9 @@ jobs:
         pixi install
         pixi run install-node-deps
         
+    - name: Run build dependency regression tests
+      run: pixi run test-build-tools
+
     - name: Run Python linting
       run: pixi run lint
       

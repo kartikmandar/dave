@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "file": "appdmg/lib/appdmg.js",
+      "before": "79a540d3f10581e553e741caeb6d3b4b66213dde15e973e36890ea31e61e0153",
+      "after": "10f600b6e8a29d5492c8394f69e2c55e6a8f55f83e4ad9daef06e27d2a29f6d6"
+    },
+    {
+      "file": "deepmerge/index.js",
+      "before": "12440c84957c1990ea2d5e33dc0091722dc1dc1585c6d20e0c780e568ffa9d30",
+      "after": "250d0249ab5243a8e7e2cb0b4d62782e17ee0bcba8d09eece669e531fa33bcdd"
+    },
+    {
+      "file": "deepmerge/dist/cjs.js",
+      "before": "2e5160f84a1141bd927264afe4d15766f1e6cf07daef182b37ff53fea121de7d",
+      "after": "d327962f403e323d15946f257fee8a3c2345bb798916031e9ace7707f6e63be9"
+    },
+    {
+      "file": "deepmerge/dist/umd.js",
+      "before": "f33e6596482d1fb5c7c427f8ef92f2aa849eea9223acd974176b2fb27ddbf73a",
+      "after": "a996c650429ad7b01104ae6cb5bb50a0c08f53062209dca34fd2103e36987adc"
+    }
+  ]
+}

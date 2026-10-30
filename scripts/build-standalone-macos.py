@@ -1,7 +1,7 @@
 """Build an Apple Silicon/Intel app using the native locked Pixi environment.
 
-Install conda-pack==0.9.2 in the build interpreter (or PYTHONPATH). Use Node 22
-or 24 for Electron Packager 18; Node 26 breaks its archive extraction streams.
+Install conda-pack==0.9.2 in the build interpreter (or PYTHONPATH). Use the
+supported Node 22 or 24 build runtime with Electron Packager 20.
 """
 
 import argparse

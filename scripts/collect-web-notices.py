@@ -1,0 +1,211 @@
+"""Collect shipped web-asset notices from upstream; keep uncertain grants explicit."""
+
+import argparse
+import hashlib
+import json
+import subprocess
+from pathlib import Path
+
+SOURCES = [
+    ("jquery-4.0.0", "MIT", ["https://raw.githubusercontent.com/jquery/jquery/4.0.0/LICENSE.txt"]),
+    (
+        "jquery-ui-1.14.1",
+        "MIT",
+        ["https://raw.githubusercontent.com/jquery/jquery-ui/1.14.1/LICENSE.txt"],
+    ),
+    ("bootstrap-5.3.8", "MIT", ["https://raw.githubusercontent.com/twbs/bootstrap/v5.3.8/LICENSE"]),
+    ("async-2.5.0", "MIT", ["https://raw.githubusercontent.com/caolan/async/v2.5.0/LICENSE"]),
+    ("plotly-3.6.0", "MIT", ["https://raw.githubusercontent.com/plotly/plotly.js/v3.6.0/LICENSE"]),
+    (
+        "plotly-2.35.2",
+        "MIT",
+        ["https://raw.githubusercontent.com/plotly/plotly.js/v2.35.2/LICENSE"],
+    ),
+    (
+        "plotly-1.30.1",
+        "MIT",
+        ["https://raw.githubusercontent.com/plotly/plotly.js/v1.30.1/LICENSE"],
+    ),
+    (
+        "mathjax-2.7.0",
+        "Apache-2.0",
+        ["https://raw.githubusercontent.com/mathjax/MathJax/2.7.0/LICENSE"],
+    ),
+    (
+        "html2canvas-0.5.0-beta3",
+        "MIT",
+        ["https://raw.githubusercontent.com/niklasvh/html2canvas/v0.5.0-beta3/LICENSE"],
+    ),
+    (
+        "jspdf-1.3.3",
+        "MIT",
+        ["https://raw.githubusercontent.com/parallax/jsPDF/v1.3.3/MIT-LICENSE.txt"],
+    ),
+    (
+        "waiting-dialog",
+        "MIT",
+        ["https://raw.githubusercontent.com/ehpc/bootstrap-waitingfor/master/LICENSE"],
+    ),
+    (
+        "font-awesome-4.7.0",
+        "OFL-1.1 fonts; MIT code; CC-BY-3.0 docs",
+        [
+            "https://fontawesome.com/v4/license/",
+            "https://openfontlicense.org/open-font-license-official-text/",
+        ],
+    ),
+    (
+        "agent-base-6.0.2",
+        "MIT",
+        [
+            "https://raw.githubusercontent.com/TooTallNate/proxy-agents/main/packages/agent-base/LICENSE"
+        ],
+    ),
+    (
+        "https-proxy-agent-5.0.1",
+        "MIT",
+        [
+            "https://raw.githubusercontent.com/TooTallNate/proxy-agents/main/packages/https-proxy-agent/LICENSE"
+        ],
+    ),
+    (
+        "lazy-val-1.0.5",
+        "MIT declared in actual package metadata",
+        ["https://raw.githubusercontent.com/develar/lazy-val/master/readme.md"],
+    ),
+    (
+        "MIT-standard-terms",
+        "MIT",
+        ["https://raw.githubusercontent.com/spdx/license-list-data/main/text/MIT.txt"],
+    ),
+    (
+        "libmagic-5.47",
+        "BSD-2-Clause-Darwin",
+        ["https://raw.githubusercontent.com/file/file/FILE5_47/COPYING"],
+    ),
+]
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--app", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    output = args.output.resolve()
+    if output.is_relative_to(args.app.resolve()):
+        parser.error("Do not modify the signed app")
+    records = []
+    for component, license_name, urls in SOURCES:
+        files, errors = [], []
+        for number, url in enumerate(urls):
+            destination = output / "upstream" / component / f"notice-{number + 1}.txt"
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            process = subprocess.run(
+                [
+                    "/usr/bin/curl",
+                    "--disable",
+                    "--fail",
+                    "--location",
+                    "--silent",
+                    "--show-error",
+                    "--proto",
+                    "=https",
+                    "--retry",
+                    "2",
+                    "--max-time",
+                    "60",
+                    "--output",
+                    str(destination),
+                    url,
+                ],
+                capture_output=True,
+                text=True,
+            )
+            if process.returncode:
+                errors.append({"url": url, "error": process.stderr.strip()})
+            else:
+                files.append(
+                    {
+                        "path": str(destination.relative_to(output)),
+                        "url": url,
+                        "sha256": hashlib.sha256(destination.read_bytes()).hexdigest(),
+                    }
+                )
+        records.append(
+            {"component": component, "license": license_name, "files": files, "errors": errors}
+        )
+    static = args.app / "Contents/Resources/resources/static"
+    inventory = []
+    for directory in (
+        static / "scripts/external",
+        static / "styles/external",
+        static / "font-awesome-4.7.0",
+        static / "fonts",
+    ):
+        for file in sorted(directory.rglob("*")):
+            if file.is_file() and not file.is_symlink():
+                inventory.append(
+                    {
+                        "path": str(file.relative_to(static)),
+                        "sha256": hashlib.sha256(file.read_bytes()).hexdigest(),
+                    }
+                )
+    unresolved = [
+        {
+            "component": "Archangelsk.ttf",
+            "reason": "Embedded Free font statement does not specify redistribution terms; author permission/license needed",
+            "origin": "http://www.podobin.atnet.ru",
+        },
+        {
+            "component": "Logger.js (DAVE-customized)",
+            "reason": "Copyright Song Ho Ahn; no explicit redistribution grant found in the bundled file or author page",
+            "origin": "https://www.songho.ca/misc/logger/logger.html",
+        },
+        {
+            "component": "Canvas2Image v0.1",
+            "reason": "Stripped legacy header; original Jacob Seidelin provenance/license must be confirmed, not inferred from a different fork",
+            "origin": "https://github.com/hongru/canvas2image",
+        },
+    ]
+    # Preserve the actual legacy declarations while awaiting full provenance review.
+    headers = output / "bundled-web-headers"
+    headers.mkdir(exist_ok=True)
+    for filename in ("colorpicker.js", "logger.js", "waiting_dialog.js", "canvas2image.js"):
+        text = (static / "scripts/external" / filename).read_text(errors="replace")
+        (headers / (filename + ".txt")).write_text(text[:4000])
+    (headers / "sb-admin-theme.css.txt").write_text(
+        (static / "styles/external/sb-admin-theme.css").read_text()[:4000]
+    )
+    from fontTools.ttLib import TTFont
+
+    for filename in (
+        static / "fonts/Archangelsk.ttf",
+        static / "font-awesome-4.7.0/fonts/FontAwesome.otf",
+    ):
+        font = TTFont(filename)
+        names = [
+            {"nameID": item.nameID, "text": item.toUnicode()}
+            for item in font["name"].names
+            if item.nameID in {0, 7, 8, 9, 11, 13, 14}
+        ]
+        (headers / (filename.name + ".json")).write_text(json.dumps(names, indent=2) + "\n")
+    report = {
+        "upstreamNotices": records,
+        "shippedWebAssetInventory": inventory,
+        "unresolvedRedistributionRights": unresolved,
+    }
+    (output / "web-components.json").write_text(json.dumps(report, indent=2) + "\n")
+    print(
+        json.dumps(
+            {
+                "upstreams": len(records),
+                "downloadErrors": [record["component"] for record in records if record["errors"]],
+                "unresolvedRights": unresolved,
+            },
+            indent=2,
+        )
+    )
+
+
+if __name__ == "__main__":
+    main()

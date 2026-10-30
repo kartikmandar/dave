@@ -242,3 +242,20 @@ source commit; publication remains a separate manual decision. Legacy release
 jobs also create drafts rather than publishing automatically. A separate clean-Mac
 browser download/install test and third-party notice review remain release
 checklist items. Intel and older macOS versions have not been validated.
+
+
+## Pre-publication notice container and acceptance kit
+
+The original notarized app above is retained unchanged as historical evidence.
+The current draft ZIP includes `THIRD_PARTY_NOTICES` alongside that same app and
+is staged in `build/release-2.0.0-arm64-prepublication`. Its checksum is tracked in
+`docs/releases/2.0.0-macos-arm64.SHA256SUMS`. The accompanying runtime source archive
+and clean-Mac kit have independent hashes in `ASSET_SHA256SUMS`.
+
+See [PREPUBLICATION_REVIEW.md](PREPUBLICATION_REVIEW.md) for build dependency fixes,
+notice provenance, unresolved redistribution permissions, source obligations and
+vendored-browser advisory review limits. See [CLEAN_MAC_INSTALL_TEST.md](CLEAN_MAC_INSTALL_TEST.md)
+for the prepared separate-machine acceptance test. These are explicit publication
+holds; the release remains a draft. The notices container does not alter the
+signed app or require a new Apple submission. Always verify the extracted app's
+signature, stapled ticket, Gatekeeper assessment and unchanged code identity.
