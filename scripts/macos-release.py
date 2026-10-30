@@ -105,7 +105,13 @@ def preflight(app, node):
     )
     if not splash_version or splash_version.group(2) != version:
         raise ValueError("Packaged splash version differs from the bundle version")
-    for required in ("THIRD_PARTY_NOTICES/README.md", "THIRD_PARTY_NOTICES/SHA256SUMS", "THIRD_PARTY_NOTICES.html", "RUNTIME_SOURCE_OBLIGATIONS.md"):
+    for required in (
+        "THIRD_PARTY_NOTICES/README.md",
+        "THIRD_PARTY_NOTICES/SHA256SUMS",
+        "THIRD_PARTY_NOTICES.html",
+        "RUNTIME_SOURCE_OBLIGATIONS.md",
+        "ELECTRON_SOURCE_REBUILD.md",
+    ):
         if not (resources / required).is_file():
             raise ValueError("Bundle the verified app notices before signing: " + required)
     metadata = json.loads(run(node, ROOT / "scripts/macos-sign.cjs", "inspect", app))

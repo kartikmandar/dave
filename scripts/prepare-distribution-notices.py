@@ -233,7 +233,7 @@ at https://github.com/kartikmandar/dave (modernization-2025).
 The electron-chromium source directory includes exact FFmpeg/Blink product sources,
 Electron patches/build configuration and pinned dependencies. Compatible FFmpeg
 and Electron Framework replacement has been executed without the publisher key.
-The full corresponding runtime/engine sources accompany the binary; the source
+The corresponding runtime/engine copyleft component sources accompany the binary; the source
 manifest records scope and does not claim a full independent Chromium rebuild.
 
 Electron/Chromium notices restored here were missing from the app's original
