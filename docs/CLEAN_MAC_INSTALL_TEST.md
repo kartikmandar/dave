@@ -59,7 +59,10 @@ No real mission data or user observation files are included.
    again through Finder, and reopen that workspace. Recalculation must succeed
    without a stale backend URL or missing cached dataset. Export and compare both
    CSVs again. Confirm the bin size, PDS settings and eight segments are retained.
-5. Verify the established controls, plot layout, file chooser and exports remain
+5. Open and close the LOG panel, check that messages retain their level colors,
+   then export a plot through Save as PNG and Save as PDF. Open both files in
+   Preview and compare their contents with the displayed plot. Verify the
+   established controls, plot layout, file chooser and exports remain
    usable. Record screenshots of initial and reopened plots.
 6. Re-enable networking, relaunch once, and repeat the basic import. No unexpected
    updater/download dialog should appear; updates are currently manual.

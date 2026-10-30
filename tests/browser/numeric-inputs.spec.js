@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
   for (const script of [
     jqueryAsset,
     jqueryUiAsset,
-    'external/logger.js',
+    'logPanel.js',
     'config.js',
     'schema.js',
     'common.js',

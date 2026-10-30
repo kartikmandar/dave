@@ -300,3 +300,30 @@ checks the final 4dc0eb342b3ec269c5cd6e57adc762db8cd6a812 identity.
 The earlier candidates above remain historical evidence and are superseded.
 The release remains a draft: Logger.js/Canvas2Image provenance, final source and
 legacy runtime advisory disposition, and the separate clean-Mac test remain open.
+
+
+## Licensed browser component replacement batch
+
+The owner authorized replacing the two remaining browser components with uncertain
+redistribution provenance. New DAVE-owned logPanel.js and canvasExport.js modules
+carry Apache-2.0 declarations and the full project license. Former vendor files
+are physically removed. Current templates use the new modules and the existing
+log panel styles and controls. The separate Electron/Python logger is unchanged.
+
+Visual export validation found that html2canvas captured SVG plots as blank
+images. Existing PNG/PDF menu actions now use the bundled MIT-licensed Plotly
+renderer. Regression tests inspect actual trace-colored pixels in both formats;
+the one-page portrait PDF was rendered and checked for clipping. Numerical
+analysis, CSV export and workspace workflows remain unchanged.
+
+The new signed candidate is
+`build/release-2.0.0-arm64-licensed-export/DAVE.app`. Its identity is
+`eeeb5e4bcfac8456317be12c7eec57b1a27de608`. The native runtime and ASAR are retained
+from the previously verified build; changed resources and their hashes are listed
+in resource-update-manifest.json. Notarization uses a fresh submission for this
+changed resource seal, and the release stays a draft throughout.
+
+The clean-Mac test now includes the log panel and opening real PNG/PDF exports.
+The separate-machine test is still not run. Remaining publication holds are final
+source-obligation/runtime advisory disposition and clean-Mac acceptance; the two
+former browser asset permission gaps are resolved in the new candidate.

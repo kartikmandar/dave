@@ -79,6 +79,12 @@ test('imports, analyzes, exports and reproduces a saved workspace against Stingr
   try {
     let page = await app.launch();
     const reference = app.reference;
+    await page.evaluate(() => { logInfo('Licensed log panel ready'); Logger.error('Diagnostic level check'); });
+    await page.locator('#loggerTab').click();
+    await expect(page.locator('#loggerContainer')).toHaveCSS('bottom', '0px');
+    await expect(page.locator('#logger .LogError').last()).toContainText('Diagnostic level check');
+    await page.locator('#loggerTab').click();
+    await expect(page.locator('#loggerContainer')).toHaveCSS('bottom', '-215px');
     const requests = [];
     const observeRequests = activePage => activePage.on('request', request => {
       if (request.method() === 'POST' && /\/get_(lightcurve|power_density_spectrum)$/.test(request.url())) {
@@ -137,6 +143,41 @@ test('imports, analyzes, exports and reproduces a saved workspace against Stingr
     await verifyCsv(lcCsv, [reference.lightcurve.time, reference.lightcurve.countrate, reference.lightcurve.countrate_err]);
     await verifyCsv(pdsCsv, [reference.pds.freq, reference.pds.power, reference.pds.power_err]);
     console.log('Workflow: exported CSV files match Stingray');
+
+    // Exercise the existing plot menu, real Plotly renderer and real download session.
+    for (const [label, signature] of [['Save as PNG', [137, 80, 78, 71]], ['Save as PDF', [37, 80, 68, 70]]]) {
+      const before = (await app.downloads()).length;
+      await page.locator(`[id="${state.lc.id}"] .btnSave`).click();
+      await page.getByRole('button', { name: label, exact: true }).click();
+      await expect.poll(async () => (await app.downloads()).length).toBe(before + 1);
+      const imageDownload = (await app.downloads())[before];
+      expect(imageDownload.state).toBe('completed');
+      const bytes = await fs.readFile(imageDownload.destination);
+      expect([...bytes.subarray(0, 4)]).toEqual(signature);
+      expect(bytes.length).toBeGreaterThan(1000);
+      const image = await app.app.evaluate(({ nativeImage }, descriptor) => {
+        let contents = process.getBuiltinModule('node:fs').readFileSync(descriptor.filename);
+        if (descriptor.pdf) {
+          const start = contents.indexOf(Buffer.from([255, 216, 255]));
+          const end = contents.lastIndexOf(Buffer.from([255, 217]));
+          contents = contents.subarray(start, end + 2);
+        }
+        const value = nativeImage.createFromBuffer(contents);
+        const pixels = value.toBitmap();
+        let blue = 0;
+        for (let offset = 0; offset < pixels.length; offset += 4) {
+          if (pixels[offset] > pixels[offset + 2] + 40 && pixels[offset] > pixels[offset + 1] + 20) blue++;
+        }
+        return { empty: value.isEmpty(), size: value.getSize(), blue };
+      }, { filename: imageDownload.destination, pdf: label === 'Save as PDF' });
+      expect(image.empty).toBe(false);
+      expect(image.size.width).toBeGreaterThan(100);
+      expect(image.size.height).toBeGreaterThan(100);
+      expect(image.blue).toBeGreaterThan(100);
+      await testInfo.attach(label, { path: imageDownload.destination });
+      expect(new URL(page.url()).origin).toBe(app.url);
+    }
+    console.log('Workflow: log panel, PNG and PDF menu exports preserve the page');
 
     const downloadCount = (await app.downloads()).length;
     await page.locator('#right-navbar .saveWorkSpace').click();

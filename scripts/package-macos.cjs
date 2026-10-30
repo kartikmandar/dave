@@ -55,7 +55,7 @@ packager({
     fs.writeFileSync(path.join(buildPath, 'DAVE.app/Contents/Resources/resources/static/scripts/version.js'),
       'BUILD_VERSION=' + JSON.stringify(appVersion) + ';\n');
   }],
-  extraResource: [manifest, stagedPython, path.join(root, 'src/main/resources'), path.join(root, 'LICENSE')],
+  extraResource: [manifest, stagedPython, path.join(root, 'src/main/resources'), path.join(root, 'LICENSE'), path.join(root, 'docs/FIRST_PARTY_COMPONENTS.md')],
 }).then(paths => {
   if (!paths.length) throw new Error('Packager did not produce an application');
   for (const folder of paths) fs.copyFileSync(path.join(root, 'src/main/resources/static/img/icon.icns'), path.join(folder, 'DAVE.app/Contents/Resources/electron.icns'));

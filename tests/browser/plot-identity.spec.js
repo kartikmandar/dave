@@ -7,7 +7,7 @@ test('plots created in the same millisecond have distinct DOM and workspace iden
   await page.clock.setFixedTime(new Date('2026-01-01T00:00:00Z'));
   await page.setContent('<div class="OutputPanelTemplate"><div class="outputPanelBody"></div></div><main></main>');
   for (const script of [
-    'external/jquery-4.0.0.min.js', 'external/logger.js', 'common.js',
+    'external/jquery-4.0.0.min.js', 'logPanel.js', 'common.js',
     'htmlControls.js', 'outputPanels/outputPanel.js'
   ]) {
     await page.addScriptTag({ path: path.join(scriptsPath, script) });

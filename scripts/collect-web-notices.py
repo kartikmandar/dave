@@ -101,6 +101,9 @@ def main():
     output = args.output.resolve()
     if output.is_relative_to(args.app.resolve()):
         parser.error("Do not modify the signed app")
+    for removed in ("logger.js.txt", "canvas2image.js.txt"):
+        if (output / "bundled-web-headers" / removed).exists():
+            parser.error("Use a fresh notice directory; removed vendor source headers are present")
     records = []
     for component, license_name, urls in SOURCES:
         files, errors = [], []
@@ -157,22 +160,35 @@ def main():
                         "sha256": hashlib.sha256(file.read_bytes()).hexdigest(),
                     }
                 )
-    unresolved = [
-        {
-            "component": "Logger.js (DAVE-customized)",
-            "reason": "Copyright Song Ho Ahn; no explicit redistribution grant found in the bundled file or author page",
-            "origin": "https://www.songho.ca/misc/logger/logger.html",
-        },
-        {
-            "component": "Canvas2Image v0.1",
-            "reason": "Stripped legacy header; original Jacob Seidelin provenance/license must be confirmed, not inferred from a different fork",
-            "origin": "https://github.com/hongru/canvas2image",
-        },
-    ]
+    # The former vendor files must be absent, rather than merely unreferenced.
+    for removed in ("logger.js", "canvas2image.js"):
+        if (static / "scripts/external" / removed).exists():
+            raise ValueError(f"Legacy component still packaged: {removed}")
+    first_party = []
+    for filename in ("logPanel.js", "canvasExport.js"):
+        file = static / "scripts" / filename
+        source = file.read_text()
+        if not source.startswith("/* SPDX-License-Identifier: Apache-2.0"):
+            raise ValueError(f"Missing first-party license declaration: {filename}")
+        inventory.append(
+            {
+                "path": str(file.relative_to(static)),
+                "sha256": hashlib.sha256(file.read_bytes()).hexdigest(),
+            }
+        )
+        first_party.append(
+            {
+                "component": filename,
+                "license": "Apache-2.0",
+                "copyright": "2026 DAVE contributors",
+                "implementation": "Original DAVE implementation using native browser APIs; compatibility API names retained",
+            }
+        )
+    unresolved = []
     # Preserve the actual legacy declarations while awaiting full provenance review.
     headers = output / "bundled-web-headers"
     headers.mkdir(exist_ok=True)
-    for filename in ("colorpicker.js", "logger.js", "waiting_dialog.js", "canvas2image.js"):
+    for filename in ("colorpicker.js", "waiting_dialog.js"):
         text = (static / "scripts/external" / filename).read_text(errors="replace")
         (headers / (filename + ".txt")).write_text(text[:4000])
     (headers / "sb-admin-theme.css.txt").write_text(
@@ -193,6 +209,7 @@ def main():
         (headers / (filename.name + ".json")).write_text(json.dumps(names, indent=2) + "\n")
     report = {
         "upstreamNotices": records,
+        "firstPartyReplacements": first_party,
         "shippedWebAssetInventory": inventory,
         "unresolvedRedistributionRights": unresolved,
     }

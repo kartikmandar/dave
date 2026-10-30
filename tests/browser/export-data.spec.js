@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
   for (const script of [
     'external/jquery-4.0.0.min.js',
     'external/jquery-ui-1.14.1.min.js',
-    'external/logger.js',
+    'logPanel.js',
     'config.js',
     'common.js',
     'htmlControls.js',

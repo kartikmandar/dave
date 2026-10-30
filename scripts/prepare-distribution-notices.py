@@ -91,16 +91,18 @@ binary release; do not rely on transient upstream links as the sole source offer
         "pylruLicenseCorrection": "Installed pylru.py SPDX and LICENSE.txt are MIT; conda GPL-2.0 metadata is stale.",
         "freetypeLicenseSelection": "FTL",
         "unresolvedRedistributionRights": web["unresolvedRedistributionRights"],
+        "firstPartyReplacements": web.get("firstPartyReplacements", []),
         "sourceReview": "Archives and declared patches verified; independent source rebuild and final obligations review pending.",
     }
     (args.notices / "review.json").write_text(json.dumps(review, indent=2) + "\n")
     (args.notices / "README.md").write_text("""# DAVE 2.0.0 third-party notices — draft review
 
-PUBLICATION HOLD: redistribution terms remain unconfirmed for
-Song Ho Ahn Logger.js and the stripped legacy Canvas2Image v0.1. Their actual
-headers/font metadata are preserved. A different fork's MIT declaration does not
-establish permission for the shipped version. Do not publish until these items
-and the clean-Mac acceptance test are resolved. No existing UI asset was changed.
+PUBLICATION HOLD: final source/runtime review and the separate clean-Mac test
+remain open. The former Song Ho Ahn Logger.js and legacy Canvas2Image files are
+removed. Their compatibility APIs are provided by new DAVE-owned logPanel.js and
+canvasExport.js implementations under the project's Apache-2.0 license. The full
+project license accompanies this folder; firstPartyReplacements records their
+provenance. Existing log-panel styles, controls and export menu are retained.
 
 Oxanium SemiBold by Severin Meyer replaces the former font with unconfirmed redistribution terms with owner
 authorization. It is bundled unmodified under OFL-1.1, with its copyright, license
@@ -128,7 +130,7 @@ metadata. lazy-val 1.0.5 declares MIT and author Vladimir Krivosheev; the upstre
 README and standard MIT terms accompany that declaration. The MIT terms also
 apply to the preserved explicit MIT declarations in Stefan Petre's Colorpicker
 and Start Bootstrap's SB Admin stylesheet; see their actual copyright headers.
-No such inferred grant is applied to the two unresolved assets.
+No license grant is inferred for the removed vendor implementations.
 
 The companion DAVE-2.0.0-RUNTIME-SOURCES.tar.gz contains verified source archives
 and exact build recipes/patches for readline, libiconv and GCC runtime components.

@@ -44,7 +44,7 @@ if ! codesign --verify --deep --strict "$app" >> "$report" 2>&1; then
 fi
 codesign -d --verbose=4 "$app" >> "$report" 2>&1
 if ! grep -q '^TeamIdentifier=BQN364P8SY$' "$report" ||
-   ! grep -q '^CDHash=4dc0eb342b3ec269c5cd6e57adc762db8cd6a812$' "$report"; then
+   ! grep -q '^CDHash=eeeb5e4bcfac8456317be12c7eec57b1a27de608$' "$report"; then
   echo 'FAIL: signed app does not match the reviewed candidate' >> "$report"
   failures=$((failures + 1))
 fi

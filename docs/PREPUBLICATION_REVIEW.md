@@ -1,11 +1,14 @@
 # DAVE 2.0.0 pre-publication review
 
-Status: **draft; publication holds remain**. The owner-authorized branding font
+Status: **draft; publication holds remain**. The browser component replacements
+are implemented and validated; their new signed candidate awaits notarization
+and draft-asset refresh. The current download remains the previously notarized
+app until that refresh is verified. The owner-authorized branding font
 replacement is implemented, signed and notarized. Existing layout, controls,
 analysis settings and workspace behavior are preserved. The separate clean-Mac
 acceptance test is prepared but has not been performed on a separate machine.
 
-## Current app and verification
+## Previously notarized app and verification
 
 The final app is staged at
 `build/release-2.0.0-arm64-oxanium-versioned-candidate/DAVE.app`. Its bundle,
@@ -88,9 +91,9 @@ Electron and tests dependencies before running `pixi run audit-build-deps`;
 Advisories: https://github.com/advisories/GHSA-gcqx-w48m-w2h4 and
 https://github.com/advisories/GHSA-w3rx-r6r6-pgpr.
 
-The npm scan does **not** cover vendored Plotly 3.6.0, jsPDF 1.3.3, html2canvas
-0.5.0-beta3 or legacy copies. DAVE exposes scientific scatter/timing plots, not
-map popups; PDF export uses an internally generated JPEG through html2canvas and
+The npm scan does **not** cover vendored Plotly 3.6.0, jsPDF 1.3.3, the unused html2canvas
+0.5.0-beta3 copy or other legacy copies. DAVE exposes scientific scatter/timing plots, not
+map popups; PDF export uses an internally generated Plotly JPEG through
 jsPDF.addImage/save, with Node integration disabled. These observations constrain
 exposure but are not complete advisory clearance. Vendor replacement requires its
 own visual/PDF regression checks and a newly signed/notarized app. Final legacy
@@ -122,15 +125,31 @@ patches. It has not been independently rebuilt. Final source completeness, LGPL
 relinking requirements and continuing source availability require review before
 public distribution. This collection is evidence, not blanket legal clearance.
 
-Two assets still lack sufficient redistribution-provenance evidence:
+The two former browser asset provenance gaps are resolved by owner-authorized replacements:
 
 | Asset | Evidence gap | Required resolution |
 | --- | --- | --- |
-| DAVE-customized Logger.js, Song Ho Ahn | Copyright/author page without a clear redistribution grant | Permission or an approved compatible replacement |
-| Legacy Canvas2Image v0.1 | Stripped original header; a different fork's MIT statement is insufficient provenance | Exact original license or an approved compatible replacement |
+| Former Logger.js | Removed from the app; original DAVE logPanel.js under Apache-2.0 | Compatibility API and existing styles retained |
+| Former Canvas2Image v0.1 | Removed from the app; original DAVE canvasExport.js under Apache-2.0 | Native canvas compatibility helpers; Plotly's existing MIT image renderer for plot exports |
 
-These assets remain intact. Keep the release a draft until their disposition,
-source/runtime review and separate clean-Mac acceptance are complete.
+See [FIRST_PARTY_COMPONENTS.md](FIRST_PARTY_COMPONENTS.md) for source provenance and
+API contracts. The former files must be absent in a new app; the notice collector
+rejects them and stale notice headers. The new modules carry explicit SPDX and
+copyright declarations, and the full DAVE Apache license accompanies the app.
+The notice manifest records both replacements and no unresolved asset grants.
+
+Actual exported images exposed a pre-existing html2canvas SVG capture problem:
+the file was a valid PNG but blank. PNG/PDF menu actions now use Plotly.toImage;
+PDFs retain the portrait page and fit the plot within margins without clipping.
+The old html2canvas script is no longer loaded. Tests inspect plotted pixels in
+both PNG and PDF's embedded image, as well as the menu, logger controls, numerical
+CSV results and workspace reopen. A rendered one-page A4 PDF was visually checked.
+The application layout and export menu remain unchanged.
+
+At this checkpoint, all 24 browser regressions and the expanded source Electron
+workflow passed (21.2 seconds). The updated signed candidate and draft asset
+refresh are being prepared. Final source-obligation/runtime advisory disposition
+and the separate clean-Mac acceptance test remain publication holds.
 
 ## Reproduce and complete acceptance
 
