@@ -24,6 +24,15 @@ the publisher key. The entire scientific/export/workspace workflow passed in
 25.0 seconds. This is a tested replacement mechanism, not a full independent
 Chromium build; the libiconv independent source build remains separate evidence.
 
+The new app variant is staged at
+`build/release-2.0.0-arm64-engine-sources/DAVE.app`, code identity
+`640407e5948938f50ea510ca2aa774f6bccd0fca`, source snapshot
+`4a1f5f03056cfc08c5b8e2fccdb4a89f1b24b238`. Its full 1,004 native signatures
+and hardened runtime pass. A read-only /tmp copy passed the expanded Stingray
+workflow in 40.1 seconds with checkout/Homebrew reads denied. Runtime/engine
+source checksums and the exact version/build pins pass. The app's production
+ASAR, native engine/media libraries and bundled Python are unchanged.
+
 The new app variant adds explicit engine/media notice and source-availability
 text inside its existing license page. It requires a new signature/notarization;
 the previous accepted candidate below remains historical until that refresh.
@@ -32,7 +41,7 @@ All 27 browser and 23 release-safety regressions pass. The source assembler now
 requires engine replacement evidence and collects engine copyleft sources, so a
 conda-only source packet cannot silently pass this review again.
 
-## Final runtime-source and browser advisory review app
+## Previous accepted candidate before engine-source closure
 
 App: `build/release-2.0.0-arm64-obligations/DAVE.app`, version 2.0.0, arm64,
 Kartik Mandar Developer ID, code identity
