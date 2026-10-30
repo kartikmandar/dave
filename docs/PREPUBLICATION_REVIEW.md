@@ -1,18 +1,42 @@
 # DAVE 2.0.0 pre-publication review
 
 Status: **draft; publication holds remain**. The browser component replacements
-are implemented and validated; their new signed candidate awaits notarization
-and draft-asset refresh. Candidate code identity is
-`eeeb5e4bcfac8456317be12c7eec57b1a27de608`, staged at
-`build/release-2.0.0-arm64-licensed-export/DAVE.app`. The current download remains the previously notarized
-app until that refresh is verified. The owner-authorized branding font
-replacement is implemented, signed and notarized. Existing layout, controls,
-analysis settings and workspace behavior are preserved. The separate clean-Mac
-acceptance test is prepared but has not been performed on a separate machine.
+are implemented, validated, signed, notarized and stapled. Existing layout,
+controls, analysis settings and workspace behavior are preserved. The separate
+clean-Mac acceptance test is prepared but has not been performed on a separate machine.
+
+## Current browser-component replacement app
+
+The current app is `build/release-2.0.0-arm64-licensed-export/DAVE.app`, code identity
+`eeeb5e4bcfac8456317be12c7eec57b1a27de608`. Apple accepted submission
+`2752730b-1768-4dbe-97fe-564707c6003d`, status code 0, with no issues. All 1,004 native
+signatures, hardened runtime, stapled ticket and Gatekeeper verification passed.
+Final notices-bearing ZIP extraction passed these checks with the same code identity.
+
+The final distribution is `build/release-2.0.0-arm64-licensed-final`.
+App ZIP SHA-256: `d618d3b2ce7bbd79be042b48c0addea159140d16ec0b189291248d09af15f19c`.
+All 164 web/font/attribution/first-party asset hashes and companion notice/source
+checksums match this candidate. Removed vendor logger.js/canvas2image.js are absent.
+The native runtime and ASAR are unchanged from the earlier validated font build.
+
+Implementation commit f8273fd and validation-documentation commit 386a376 passed
+Linux, macOS, Windows and security CI:
+https://github.com/kartikmandar/dave/actions/runs/41003174855 and
+https://github.com/kartikmandar/dave/actions/runs/41003870165.
+Local checks passed 24 browser regressions, six Node release/runtime regressions
+and 13 Python release-safety tests. The expanded source workflow passed in 21.2 s;
+the read-only signed candidate passed in 43.1 s; the final archive extraction
+passed in 43.2 s outside the checkout with checkout/Homebrew reads denied.
+This includes independent Stingray numerical comparisons, 288 light-curve and 15
+PDS CSV rows, log controls, real plot pixels in PNG/PDF, shutdown and workspace reopen.
+
+Remaining publication holds: separate clean-Mac browser-download/offline Finder
+acceptance, final runtime-source completeness/LGPL obligations and legacy browser
+advisory disposition. The two replaced asset permission gaps are resolved.
 
 ## Previously notarized app and verification
 
-The final app is staged at
+Historical font-only app (superseded) is staged at
 `build/release-2.0.0-arm64-oxanium-versioned-candidate/DAVE.app`. Its bundle,
 embedded package and packaged splash all use version 2.0.0. Its code identity is
 `4dc0eb342b3ec269c5cd6e57adc762db8cd6a812`.
@@ -152,8 +176,10 @@ At this checkpoint, all 24 browser regressions and the expanded source Electron
 workflow passed (21.2 seconds). The updated signed candidate also passed the complete workflow in 43.1 seconds
 from a read-only /tmp copy, with checkout and Homebrew reads denied. All 164 web
 asset hashes and companion notice/source checksums match this candidate; both
-former vendor files are absent. Notarization and draft asset refresh are pending. Final source-obligation/runtime advisory disposition
-and the separate clean-Mac acceptance test remain publication holds.
+former vendor files are absent. Notarization, stapling and final archive validation
+have passed. The verified notices, runtime sources and clean-Mac kit accompany
+the final ZIP. Final source-obligation/runtime advisory disposition and the
+separate clean-Mac acceptance test remain publication holds.
 
 ## Reproduce and complete acceptance
 
@@ -181,11 +207,11 @@ negative CSV checks reject altered values, missing rows and NaNs. No automatic
 script certifies that a machine is clean.
 
 
-Final extraction evidence: all 164 third-party web/font/attribution hashes match
-the inventory, the old font is absent, the packaged version resource is 2.0.0,
-and the production ASAR is unchanged from the inventoried font build. A read-only
-copy outside the checkout passed the complete packaged scientific workflow in
-40.6 seconds, with checkout and Homebrew reads denied. All 288 light-curve rows
-and 15 PDS rows match the clean-Mac kit's independent references. Both normal
-shutdowns and fresh-process workspace recalculation passed. The extracted app's
-code identity, deep signatures, stapled ticket and Gatekeeper assessment passed.
+Current final extraction evidence: all 164 web/font/attribution/first-party hashes
+match the inventory, removed vendor components and old font are absent, the packaged
+version is 2.0.0 and the production ASAR is unchanged. A read-only final extraction
+passed the complete workflow in 43.2 seconds, including 288 light-curve and 15
+PDS rows against independent references, PNG/PDF content, log controls, normal
+shutdown and fresh workspace recalculation. Signatures, ticket and Gatekeeper
+passed on the same extraction. ASSET_SHA256SUMS covers all three archives.
+Earlier font-only artifacts and their checksums are historical and superseded.

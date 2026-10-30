@@ -269,11 +269,12 @@ and its checksum are superseded.
 See [PREPUBLICATION_REVIEW.md](PREPUBLICATION_REVIEW.md) for dependency remediation,
 notice provenance and remaining publication holds. See
 [CLEAN_MAC_INSTALL_TEST.md](CLEAN_MAC_INSTALL_TEST.md) for the prepared separate-Mac
-test. Logger.js/Canvas2Image provenance, final source/runtime advisory disposition
-and the separate clean-Mac test remain open. The release stays a draft.
+test. The historical font-only build retained Logger.js/Canvas2Image provenance
+gaps; the replacement batch below resolves them. Final source/runtime advisory
+disposition and the separate clean-Mac test remain open. The release stays a draft.
 
 
-## Final version-stamped candidate, accepted 2026-10-30
+## Historical font-only version-stamped candidate, accepted 2026-10-30
 
 The final signed copy is
 `build/release-2.0.0-arm64-oxanium-versioned-candidate/DAVE.app`, with code identity
@@ -298,8 +299,9 @@ after extraction and against GitHub's uploaded asset digests. The clean-Mac kit
 checks the final 4dc0eb342b3ec269c5cd6e57adc762db8cd6a812 identity.
 
 The earlier candidates above remain historical evidence and are superseded.
-The release remains a draft: Logger.js/Canvas2Image provenance, final source and
-legacy runtime advisory disposition, and the separate clean-Mac test remain open.
+The release remained a draft at that checkpoint. The replacement batch below
+resolves Logger.js/Canvas2Image provenance; final source/runtime advisory disposition
+and the separate clean-Mac test remain open.
 
 
 ## Licensed browser component replacement batch
@@ -327,3 +329,21 @@ The clean-Mac test now includes the log panel and opening real PNG/PDF exports.
 The separate-machine test is still not run. Remaining publication holds are final
 source-obligation/runtime advisory disposition and clean-Mac acceptance; the two
 former browser asset permission gaps are resolved in the new candidate.
+
+
+### Accepted replacement distribution, 2026-10-30
+
+Apple accepted `2752730b-1768-4dbe-97fe-564707c6003d` with no issues. All 1,004 native
+signatures, hardened runtime, staple and Gatekeeper passed before and after final
+ZIP extraction. The current code identity is eeeb5e4bcfac8456317be12c7eec57b1a27de608.
+The final app ZIP is in `build/release-2.0.0-arm64-licensed-final` and has SHA-256
+`d618d3b2ce7bbd79be042b48c0addea159140d16ec0b189291248d09af15f19c`.
+It includes the regenerated THIRD_PARTY_NOTICES; source and clean-Mac kit archives accompany it. The kit checks this same current code identity.
+
+Implementation f8273fd and validation documentation 386a376 passed all-platform
+and security CI. The final read-only extraction passed the expanded independent
+Stingray workflow in 43.2 seconds, with checkout and Homebrew reads denied.
+Real PNG/PDF plotted content, log controls, 288 light-curve rows, 15 PDS rows and
+fresh-process workspace reopen passed. The separate clean-Mac test remains not run.
+The GitHub Release remains a draft with the final source/runtime advisory and
+clean-Mac publication holds explicitly retained.
