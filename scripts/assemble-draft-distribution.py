@@ -53,7 +53,7 @@ def main():
     shutil.copytree(args.notices, stage / "THIRD_PARTY_NOTICES")
     archive = args.output / "DAVE-2.0.0-macOS-arm64.zip"
     subprocess.run(
-        ["/usr/bin/ditto", "-c", "-k", "--sequesterRsrc", str(stage), str(archive)], check=True
+        ["/usr/bin/ditto", "-c", "-k", "--norsrc", "--noextattr", str(stage), str(archive)], check=True
     )
     assert identity(stage / "DAVE.app") == original
     extracted = args.output / "verified-extraction"
