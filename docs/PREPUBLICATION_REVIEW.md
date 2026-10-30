@@ -1,11 +1,65 @@
 # DAVE 2.0.0 pre-publication review
 
-Status: **draft; publication holds remain**. The browser component replacements
-are implemented, validated, signed, notarized and stapled. Existing layout,
-controls, analysis settings and workspace behavior are preserved. The separate
-clean-Mac acceptance test is prepared but has not been performed on a separate machine.
+Status: **draft; clean-Mac acceptance remains open**. Runtime-source engineering
+obligations and the legacy browser advisory review are resolved in the new source
+and signed candidate described below. Its new Apple submission and draft asset
+refresh are pending. The draft download remains the previously verified app
+until acceptance and final archive verification. Existing UI and workflows remain.
 
-## Current browser-component replacement app
+## Runtime-source and browser advisory review candidate
+
+Candidate: `build/release-2.0.0-arm64-obligations/DAVE.app`, version 2.0.0, arm64,
+Kartik Mandar Developer ID, code identity
+`e23b4f6d1700d628f1540257d24afa78f37a1531`. Implementation source commit is
+`90db6da19cff2f721781047a725687ea62072ac5`; current CI is
+https://github.com/kartikmandar/dave/actions/runs/41033664639.
+All 1,004 native signatures passed. A read-only /tmp candidate passed the full
+Stingray import/light-curve/PDS/CSV/PNG/PDF/workspace workflow in 51.5 seconds,
+with checkout/Homebrew reads denied. The rendered PDF retains the same image,
+portrait A4 page and margins; its parser reports no JavaScript, forms or encryption.
+All 27 browser regressions and 18 release-safety tests pass.
+
+Actual shipped changes: Async 2.6.4 replaces vulnerable 2.5.0; MathJax 2.7.9 plus
+local TeX/accessibility modules and Safe configuration replaces 2.7.0. Obsolete
+Plotly 1.30.1/backup/2.35.2 and html2canvas copies are removed. jsPDF is removed,
+including its unused HTML/forms/encryption code and ambiguously licensed MD5
+helper. Original Apache-2.0 imagePDF.js preserves the existing single-image PDF
+export. Its pixel content, byte offsets, fit bounds and input rejection are tested.
+The vendor manifest pins every served vendor asset and safety configuration;
+CI rejects unreviewed inventory changes. The notice inventory has 200 web/font/
+attribution/first-party files and no unresolved asset grants. Full notices are
+inside the app and available through the existing Help > View License menu.
+
+Exactly one live registry report remains: MathJax GHSA-v638-q856-grg8, whose
+maintainer disputes applicability. It handles internal message templates; DAVE
+has no relevant user-message/configuration path. The exact exception, evidence,
+conditions for renewed review and live audit are recorded in
+[security/BROWSER_ADVISORY_REVIEW.md](security/BROWSER_ADVISORY_REVIEW.md).
+This is an explicit bounded disposition, not an assertion of zero registry findings.
+
+The runtime-source companion includes exact Python/ncurses sources and recipes
+alongside Readline/libiconv/GCC/zlib, all declared patches, an exact DAVE source
+snapshot, source commit, dependency lock, relocation/build/replacement scripts and
+license/modification-rights documentation. Hashes and patch presence pass. Only
+credential/environment filenames are excluded from the source snapshot, without
+reading their contents; omissions are recorded. DAVE's source/runtime code is supplied.
+
+LGPL shared-library replacement is demonstrated: libiconv 1.18 plus the supplied
+macOS encoding patch was independently compiled with an added exported marker.
+The marker loaded in a private locally signed app without the publisher key;
+bundled libxml2 used it to decode ISO-8859-2 correctly, and the full scientific/
+workspace workflow passed in 42.0 seconds. The official native runtime remains
+unchanged. See [RUNTIME_SOURCE_OBLIGATIONS.md](RUNTIME_SOURCE_OBLIGATIONS.md) and
+[LGPL_REBUILD_EXAMPLE.md](LGPL_REBUILD_EXAMPLE.md) for direct source distribution,
+continuing availability, modification rights and LGPL section 6(b) mechanics.
+A byte-for-byte rebuild of every scientific dependency is not claimed.
+
+The remaining separate-machine acceptance test is **not run**. The prepared kit
+checks this candidate identity and includes direct-Stingray references. It must
+still cover a real browser download, quarantine, offline Finder launch and the
+full scientific/workspace workflow on a clean Mac. Keep the release as a draft.
+
+## Previous browser-component replacement draft app
 
 The current app is `build/release-2.0.0-arm64-licensed-export/DAVE.app`, code identity
 `eeeb5e4bcfac8456317be12c7eec57b1a27de608`. Apple accepted submission
@@ -30,9 +84,8 @@ passed in 43.2 s outside the checkout with checkout/Homebrew reads denied.
 This includes independent Stingray numerical comparisons, 288 light-curve and 15
 PDS CSV rows, log controls, real plot pixels in PNG/PDF, shutdown and workspace reopen.
 
-Remaining publication holds: separate clean-Mac browser-download/offline Finder
-acceptance, final runtime-source completeness/LGPL obligations and legacy browser
-advisory disposition. The two replaced asset permission gaps are resolved.
+At that earlier checkpoint, clean-Mac, source and legacy-advisory review were
+open; the new batch above resolves the latter two engineering items. The two replaced asset permission gaps are resolved.
 
 ## Previously notarized app and verification
 
