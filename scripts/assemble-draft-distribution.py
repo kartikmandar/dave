@@ -76,10 +76,14 @@ def main():
             args.sources.name,
         ],
         check=True,
+        env={"COPYFILE_DISABLE": "1"},
     )
     kit_archive = args.output / "DAVE-2.0.0-CLEAN-MAC-TEST.zip"
     subprocess.run(
-        ["/usr/bin/ditto", "-c", "-k", "--keepParent", str(args.test_kit), str(kit_archive)],
+        [
+            "/usr/bin/ditto", "-c", "-k", "--norsrc", "--noextattr", "--keepParent",
+            str(args.test_kit), str(kit_archive),
+        ],
         check=True,
     )
     assets = [archive, source_archive, kit_archive]

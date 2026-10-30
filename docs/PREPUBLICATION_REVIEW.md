@@ -3,8 +3,8 @@
 Status: **draft; clean-Mac acceptance remains open**. Runtime-source engineering
 obligations and the legacy browser advisory review are resolved in the new source
 and app source described below. An additional engine/media source closure was
-completed before draft promotion; its in-app notice update is being signed and
-notarized. Earlier accepted app/archive evidence remains historical. Existing UI
+completed before draft promotion; its in-app notice update is signed, notarized
+and stapled. Earlier accepted app/archive evidence remains historical. Existing UI
 and workflows remain. The separate physical clean-Mac acceptance test is still not run.
 
 ## Additional Electron/Chromium source closure
@@ -34,12 +34,45 @@ source checksums and the exact version/build pins pass. The app's production
 ASAR, native engine/media libraries and bundled Python are unchanged.
 
 The new app variant adds explicit engine/media notice and source-availability
-text inside its existing license page. It requires a new signature/notarization;
-the previous accepted candidate below remains historical until that refresh.
+text inside its existing license page. Its fresh notarization is accepted;
+the previous accepted candidate below remains historical.
 Scientific UI, library code, analysis and workspace workflows are unchanged.
 All 27 browser and 23 release-safety regressions pass. The source assembler now
 requires engine replacement evidence and collects engine copyleft sources, so a
 conda-only source packet cannot silently pass this review again.
+
+## Final engine/runtime-source distribution verification
+
+Apple accepted submission `087e8459-d1d3-42be-8125-9054af8cb458`, status 0,
+with no issues. Its uploaded archive SHA matches Apple's log, including the
+arm64 ticket for code identity `640407e5948938f50ea510ca2aa774f6bccd0fca`.
+All 1,004 native signatures, hardened runtime, stapled ticket and Gatekeeper
+checks pass before and after final ZIP extraction. The app and test-kit ZIPs
+exclude AppleDouble metadata; the companion source archive contents are verified.
+
+Final assets: `build/release-2.0.0-arm64-engine-sources-final`.
+App ZIP SHA-256: `9e636e38df187feabebfdbed830bda5b9791d383c8eb1a65d36273880fa5bf62`.
+A read-only final extraction passed the complete workflow in 41.9 seconds,
+with checkout/Homebrew reads denied. The 288 light-curve and 15 averaged-PDS
+CSV rows match independent Stingray references within 1e-6. Real PNG/PDF plotted
+content, log controls, shutdown and fresh-process workspace reopen pass.
+All 200 shipped web asset hashes, internal/companion notices, source checksums,
+archive contents and DAVE license-page local links pass.
+
+Binary source snapshot is `4a1f5f03056cfc08c5b8e2fccdb4a89f1b24b238`.
+The source companion separately includes the optional test-only update through
+`beb384c466728d8fa3ed9fde289a75e4ab76760f`, whose Linux/macOS/Windows/security
+CI passed: https://github.com/kartikmandar/dave/actions/runs/41048719938.
+That update isolates Stingray's random fit-start jitter in one regression and
+checks the real constant fit against its analytic mean-power estimate; production
+fitting behavior and the sealed app are unchanged. All 554 local Python tests,
+27 browser regressions and 23 release-safety tests pass.
+
+The physical separate clean-Mac browser-download/offline Finder acceptance test
+remains **not run**; its supplied RESULTS.json remains `not-run`. Retain the
+explicit maintainer-disputed MathJax GHSA-v638-q856-grg8 exception. Compatible
+recipient-built engine replacement was tested; no independent full Chromium
+build is claimed. The GitHub release remains an unpublished draft.
 
 ## Previous accepted candidate before engine-source closure
 
