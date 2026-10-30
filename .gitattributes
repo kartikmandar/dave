@@ -2,3 +2,7 @@
 pixi.lock merge=binary linguist-language=YAML linguist-generated=true
 
 src/main/resources/static/scripts/external/MathJax/** -whitespace
+# Preserve reviewed upstream bytes on Windows checkouts as well as macOS/Linux.
+src/main/resources/static/scripts/external/** -text
+src/main/resources/static/scripts/mathJaxConfig.js -text
+src/main/resources/static/scripts/imagePDF.js -text
