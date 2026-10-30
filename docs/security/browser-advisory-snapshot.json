@@ -1,0 +1,26 @@
+{
+  "reviewedOn": "2026-10-30",
+  "filesVerified": 150,
+  "liveAdvisoryQuery": true,
+  "advisories": [
+    {
+      "id": "GHSA-v638-q856-grg8",
+      "package": "mathjax",
+      "version": "2.7.9",
+      "url": "https://github.com/advisories/GHSA-v638-q856-grg8",
+      "severity": "high",
+      "disposition": "reviewed-exception"
+    }
+  ],
+  "exceptions": [
+    {
+      "id": "GHSA-v638-q856-grg8",
+      "package": "mathjax",
+      "version": "2.7.9",
+      "disposition": "not-applicable-to-DAVE-input-path",
+      "reason": "Maintainer disputes report: regex handles MathJax-supplied localization/message templates; DAVE supplies no user strings to Message.Set or Localization._. Locally bundled default config and fixed plot labels; no application callers. Re-review if message/localization APIs or untrusted config introduced.",
+      "source": "https://github.com/mathjax/MathJax/issues/3074#issuecomment-1658291365"
+    }
+  ],
+  "errors": []
+}

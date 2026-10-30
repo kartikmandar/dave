@@ -978,7 +978,7 @@ function Plot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPlotRea
     var width = this.plotElem._fullLayout.width;
     var height = this.plotElem._fullLayout.height;
     return Plotly.toImage(this.plotElem, { format: 'jpeg' }).then(function (image) {
-      var pdf = new jsPDF();
+      var pdf = new window.jspdf.jsPDF();
       var page = pdf.internal.pageSize;
       var pageWidth = typeof page.getWidth === 'function' ? page.getWidth() : page.width;
       var pageHeight = typeof page.getHeight === 'function' ? page.getHeight() : page.height;

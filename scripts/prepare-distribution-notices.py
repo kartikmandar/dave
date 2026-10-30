@@ -3,7 +3,9 @@
 import argparse
 import hashlib
 import json
+import re
 import shutil
+import subprocess
 from pathlib import Path
 
 
@@ -20,7 +22,14 @@ def main():
     parser.add_argument("--notices", type=Path, required=True)
     parser.add_argument("--sources", type=Path, required=True)
     parser.add_argument("--cache", type=Path, default=Path("build/third-party-source-cache"))
+    parser.add_argument("--source-commit", required=True, help="Full Git commit matching the packaged DAVE source")
+    parser.add_argument("--replacement-evidence", required=True, type=Path)
     args = parser.parse_args()
+    if not re.fullmatch(r"[0-9a-f]{40}", args.source_commit):
+        parser.error("Use a full source commit")
+    replacement = json.loads(args.replacement_evidence.read_text())
+    if not replacement.get("modifiedLibraryLoaded") or not replacement.get("workflowPassed"):
+        parser.error("A real modified-library load and full workflow must pass first")
     if args.sources.exists():
         parser.error("Use a new source directory; existing evidence is preserved")
     runtime = json.loads((args.notices / "runtime-components.json").read_text())
@@ -40,7 +49,7 @@ def main():
     packages = {record["name"]: record for record in runtime["condaPackages"]}
     sources = []
     for record in resolutions["resolutions"]:
-        selected = [source for source in record.get("sources", []) if source["copyleftSource"]]
+        selected = [source for source in record.get("sources", []) if source["copyleftSource"] or source.get("runtimeSourceDependency")]
         if not selected:
             continue
         package = packages[record["name"]]
@@ -59,11 +68,22 @@ def main():
             if not destination.exists():
                 shutil.copyfile(archive, destination)
             sources.append({"package": identifier, **source})
+    source_files = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", args.source_commit], text=True).splitlines()
+    omitted = [name for name in source_files if re.search(r"(^|/)(\.env($|\.)|credentials($|\.))|\.(pem|key|p8|p12)$", name)]
+    included = [name for name in source_files if name not in omitted]
+    snapshot = args.sources / "DAVE-source.tar.gz"
+    subprocess.run(["git", "archive", "--format=tar.gz", "--prefix=DAVE-source/", "--output=" + str(snapshot.resolve()), args.source_commit, "--", *included], check=True)
+    (args.sources / "source-snapshot-omissions.json").write_text(json.dumps({"reason": "Excluded credential/environment filenames without reading their contents", "paths": omitted}, indent=2) + "\n")
+    (args.sources / "DAVE-source-commit.txt").write_text(args.source_commit + "\n")
+    for name in ("RUNTIME_SOURCE_OBLIGATIONS.md", "LGPL_REBUILD_EXAMPLE.md"):
+        shutil.copyfile(Path(__file__).resolve().parents[1] / "docs" / name, args.sources / name)
+    shutil.copyfile(args.replacement_evidence, args.sources / "replacement-validation.json")
+    shutil.copyfile(args.notices / "runtime-components.json", args.sources / "runtime-components.json")
     (args.sources / "source-manifest.json").write_text(json.dumps(sources, indent=2) + "\n")
     (args.sources / "README.md").write_text("""# DAVE 2.0.0 bundled runtime sources
 
 These hash-verified upstream archives and exact conda-forge build recipes/patches
-correspond to the shipped readline, libiconv and GCC runtime packages. GCC build
+correspond to the shipped readline, libiconv, Python, ncurses and GCC runtime packages. GCC build
 sources also include zlib. See source-manifest.json for package builds, download
 URLs, hashes and patches; recipes contain build scripts and rendered requirements.
 The binaries are conda-forge builds, relocated for DAVE by the public packaging
@@ -75,8 +95,12 @@ Library Exception. Read their full notices in THIRD_PARTY_NOTICES. Shared runtim
 libraries remain separate files; user-modified bundles require appropriate local
 signing and may no longer satisfy Gatekeeper. Do not bypass Gatekeeper for the
 clean-Mac acceptance test. This source collection has not been rebuilt independently
-and is not a legal clearance. Review completeness and any LGPL relinking obligations
-before publication. Keep this companion source asset available alongside each
+byte-for-byte across every scientific dependency. The supplied replacement evidence
+records an independently compiled modified libiconv, loaded in a private locally
+signed copy that passes the full scientific/workspace workflow. Modification
+rights and the LGPL section 6(b) shared-library mechanism are documented in
+RUNTIME_SOURCE_OBLIGATIONS.md. DAVE-source.tar.gz supplies the exact source commit,
+including relocation, replacement, packaging scripts and dependency lock. Keep this companion source asset available alongside each
 binary release; do not rely on transient upstream links as the sole source offer.
 """)
     review = {
@@ -92,13 +116,18 @@ binary release; do not rely on transient upstream links as the sole source offer
         "freetypeLicenseSelection": "FTL",
         "unresolvedRedistributionRights": web["unresolvedRedistributionRights"],
         "firstPartyReplacements": web.get("firstPartyReplacements", []),
-        "sourceReview": "Archives and declared patches verified; independent source rebuild and final obligations review pending.",
+        "sourceReview": "Engineering obligations review complete: exact sources/recipes/patches, Python/Readline dependencies, source snapshot, modification rights and tested LGPL shared-library replacement supplied. Byte-for-byte rebuild of all scientific packages is not claimed.",
+        "sourceCommit": args.source_commit,
+        "replacementValidation": replacement,
+        "publicationHolds": ["separate clean-Mac acceptance test"],
     }
     (args.notices / "review.json").write_text(json.dumps(review, indent=2) + "\n")
     (args.notices / "README.md").write_text("""# DAVE 2.0.0 third-party notices — draft review
 
-PUBLICATION HOLD: final source/runtime review and the separate clean-Mac test
-remain open. The former Song Ho Ahn Logger.js and legacy Canvas2Image files are
+PUBLICATION HOLD: the separate clean-Mac test remains open. Runtime-source
+engineering obligations and legacy browser advisory dispositions are documented
+in the release review; the remaining MathJax advisory has a narrow, explicit
+maintainer-disputed exception, not a claim of zero registry findings. The former Song Ho Ahn Logger.js and legacy Canvas2Image files are
 removed. Their compatibility APIs are provided by new DAVE-owned logPanel.js and
 canvasExport.js implementations under the project's Apache-2.0 license. The full
 project license accompanies this folder; firstPartyReplacements records their
@@ -133,9 +162,11 @@ and Start Bootstrap's SB Admin stylesheet; see their actual copyright headers.
 No license grant is inferred for the removed vendor implementations.
 
 The companion DAVE-2.0.0-RUNTIME-SOURCES.tar.gz contains verified source archives
-and exact build recipes/patches for readline, libiconv and GCC runtime components.
+and exact build recipes/patches for readline, libiconv, Python, ncurses and GCC
+runtime components, plus the exact DAVE source snapshot and modification rights.
 Read its README and source-manifest.json. Retain this asset alongside the binary;
-review source completeness and applicable relinking requirements before publication.
+the documented LGPL shared-library mechanism has been tested with a recipient-built
+modified libiconv. The evidence does not certify a byte-for-byte rebuild of every dependency.
 DAVE source, relocation scripts and the dependency lock are in the release commit
 at https://github.com/kartikmandar/dave (modernization-2025).
 

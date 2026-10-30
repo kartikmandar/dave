@@ -21,32 +21,17 @@ SOURCES = [
         ["https://raw.githubusercontent.com/jquery/jquery-ui/1.14.1/LICENSE.txt"],
     ),
     ("bootstrap-5.3.8", "MIT", ["https://raw.githubusercontent.com/twbs/bootstrap/v5.3.8/LICENSE"]),
-    ("async-2.5.0", "MIT", ["https://raw.githubusercontent.com/caolan/async/v2.5.0/LICENSE"]),
+    ("async-2.6.4", "MIT", ["https://raw.githubusercontent.com/caolan/async/v2.6.4/LICENSE"]),
     ("plotly-3.6.0", "MIT", ["https://raw.githubusercontent.com/plotly/plotly.js/v3.6.0/LICENSE"]),
     (
-        "plotly-2.35.2",
-        "MIT",
-        ["https://raw.githubusercontent.com/plotly/plotly.js/v2.35.2/LICENSE"],
-    ),
-    (
-        "plotly-1.30.1",
-        "MIT",
-        ["https://raw.githubusercontent.com/plotly/plotly.js/v1.30.1/LICENSE"],
-    ),
-    (
-        "mathjax-2.7.0",
+        "mathjax-2.7.9",
         "Apache-2.0",
-        ["https://raw.githubusercontent.com/mathjax/MathJax/2.7.0/LICENSE"],
+        ["https://raw.githubusercontent.com/mathjax/MathJax/2.7.9/LICENSE"],
     ),
     (
-        "html2canvas-0.5.0-beta3",
+        "jspdf-4.2.1",
         "MIT",
-        ["https://raw.githubusercontent.com/niklasvh/html2canvas/v0.5.0-beta3/LICENSE"],
-    ),
-    (
-        "jspdf-1.3.3",
-        "MIT",
-        ["https://raw.githubusercontent.com/parallax/jsPDF/v1.3.3/MIT-LICENSE.txt"],
+        ["https://raw.githubusercontent.com/parallax/jsPDF/v4.2.1/LICENSE"],
     ),
     (
         "waiting-dialog",

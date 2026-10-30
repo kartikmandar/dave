@@ -6,11 +6,12 @@
   </div>
 </div>
 
+<script type="text/javascript" src="{{ url_for('static', filename='scripts/mathJaxConfig.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='scripts/external/MathJax/MathJax.js') }}?config=TeX-AMS-MML_SVG"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='scripts/external/plotly-3.6.0.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='scripts/plots/plotlyMigration.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='scripts/canvasExport.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='scripts/external/jspdf_1_3_3.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='scripts/external/jspdf-4.2.1.umd.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='scripts/outputPanels/outputPanel.js') }}?v={{ get_version() }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='scripts/outputPanels/wfOutputPanel.js') }}?v={{ get_version() }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='scripts/plots/plotter.js') }}?v={{ get_version() }}"></script>

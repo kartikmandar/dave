@@ -647,7 +647,9 @@ function createApplicationMenu() {
         { type: 'separator' },
         {
           label: 'View License',
-          click: () => shell.openExternal('https://github.com/StingraySoftware/dave/blob/master/LICENSE')
+          click: () => app.isPackaged
+            ? shell.openPath(path.join(process.resourcesPath, 'THIRD_PARTY_NOTICES.html'))
+            : shell.openExternal('https://github.com/StingraySoftware/dave/blob/master/LICENSE')
         }
       ]
     }

@@ -347,3 +347,33 @@ Real PNG/PDF plotted content, log controls, 288 light-curve rows, 15 PDS rows an
 fresh-process workspace reopen passed. The separate clean-Mac test remains not run.
 The GitHub Release remains a draft with the final source/runtime advisory and
 clean-Mac publication holds explicitly retained.
+
+
+## Runtime-source and browser advisory review batch
+
+The previous replacement app remains the current draft download until the next
+signed/notarized asset set is verified. The new batch updates the actual jsPDF
+asset to 4.2.1, Async to 2.6.4 and MathJax to 2.7.9 with local TeX/accessibility
+modules and Safe configuration. Obsolete Plotly/html2canvas copies are removed.
+See security/BROWSER_ADVISORY_REVIEW.md for the exact remaining disputed MathJax
+exception and scripts/audit-browser-vendors.py --live for fresh registry checks.
+
+The source companion now includes Python/ncurses sources and exact conda recipes
+as well as the Readline/libiconv/GCC sources, and an exact DAVE source snapshot.
+RUNTIME_SOURCE_OBLIGATIONS.md records license scope, continuing source availability
+and modification rights. LGPL_REBUILD_EXAMPLE.md records the tested rebuild path.
+An independently compiled modified libiconv loaded in a private locally signed
+copy, which passed the full Electron workflow in 42.0 s without the publisher key.
+The official app's native runtime is unchanged.
+
+For future builds, collect notices against the unsigned staging app, resolve
+sources, and run prepare-distribution-notices.py with --source-commit and
+--replacement-evidence. Then run bundle-app-notices.py --app STAGING_APP --notices
+NOTICE_DIR before macos-release.py sign. Signing preflight rejects missing local
+notices. The existing Help > View License menu opens the local license/notice page
+in packaged builds. Full notices remain available inside the app after moving it
+to Applications. Preserve the companion source archive alongside each binary.
+
+These engineering review items are resolved in the new source; new candidate
+notarization and final archive validation are pending. The separate physical
+clean-Mac acceptance test remains open, and the release stays a draft.

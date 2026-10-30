@@ -101,6 +101,7 @@ def source_notices(record, root, cache):
                     "archive": archive.name,
                     "patches": source.get("patches", []),
                     "copyleftSource": copyleft,
+                    "runtimeSourceDependency": record["name"] in {"python", "ncurses"},
                 }
             )
             with tarfile.open(archive, "r:*") as package:
@@ -167,7 +168,7 @@ def main():
                     "distributionVersion": candidate["version"],
                 }
             )
-        elif record["noticeStatus"] == "missing-license-text" or (
+        elif record["name"] in {"python", "ncurses"} or record["noticeStatus"] == "missing-license-text" or (
             "GPL" in record["license"] and " OR " not in record["license"]
         ):
             pending.append(record)

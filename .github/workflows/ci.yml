@@ -47,6 +47,9 @@ jobs:
     - name: Install Playwright browsers
       run: pixi run test-e2e-install
 
+    - name: Verify shipped browser vendor inventory
+      run: pixi run python scripts/audit-browser-vendors.py
+
     - name: Run browser regression tests
       run: pixi run test-browser
 
