@@ -2,7 +2,9 @@
 
 Status: **draft; publication holds remain**. The browser component replacements
 are implemented and validated; their new signed candidate awaits notarization
-and draft-asset refresh. The current download remains the previously notarized
+and draft-asset refresh. Candidate code identity is
+`eeeb5e4bcfac8456317be12c7eec57b1a27de608`, staged at
+`build/release-2.0.0-arm64-licensed-export/DAVE.app`. The current download remains the previously notarized
 app until that refresh is verified. The owner-authorized branding font
 replacement is implemented, signed and notarized. Existing layout, controls,
 analysis settings and workspace behavior are preserved. The separate clean-Mac
@@ -147,8 +149,10 @@ CSV results and workspace reopen. A rendered one-page A4 PDF was visually checke
 The application layout and export menu remain unchanged.
 
 At this checkpoint, all 24 browser regressions and the expanded source Electron
-workflow passed (21.2 seconds). The updated signed candidate and draft asset
-refresh are being prepared. Final source-obligation/runtime advisory disposition
+workflow passed (21.2 seconds). The updated signed candidate also passed the complete workflow in 43.1 seconds
+from a read-only /tmp copy, with checkout and Homebrew reads denied. All 164 web
+asset hashes and companion notice/source checksums match this candidate; both
+former vendor files are absent. Notarization and draft asset refresh are pending. Final source-obligation/runtime advisory disposition
 and the separate clean-Mac acceptance test remain publication holds.
 
 ## Reproduce and complete acceptance
