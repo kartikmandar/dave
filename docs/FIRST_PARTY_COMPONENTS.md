@@ -23,7 +23,7 @@ bytes. The synchronous return-image and optional resize interfaces remain availa
 Downloads use an anchor's download attribute rather than page navigation, preserving
 workspace state. The default filename is download.png, download.jpg or download.bmp.
 Regression tests decode actual output pixels, dimensions and BMP padding and exercise
-the actual plot PNG/PDF actions with the existing Plotly/jsPDF assets.
+the actual plot PNG/PDF actions with the bundled Plotly renderer and original DAVE PDF writer.
 
 Plot exports now use Plotly.toImage, an API of the already bundled MIT-licensed
 Plotly library. The former html2canvas path produced blank images for SVG plots;

@@ -2,22 +2,42 @@
 
 Status: **draft; clean-Mac acceptance remains open**. Runtime-source engineering
 obligations and the legacy browser advisory review are resolved in the new source
-and signed candidate described below. Its new Apple submission and draft asset
-refresh are pending. The draft download remains the previously verified app
-until acceptance and final archive verification. Existing UI and workflows remain.
+and signed app described below. Apple accepted the new submission; stapling,
+Gatekeeper and the final ZIP extraction checks passed. Existing UI and workflows
+remain. The separate physical clean-Mac acceptance test is still not run.
 
-## Runtime-source and browser advisory review candidate
+## Final runtime-source and browser advisory review app
 
-Candidate: `build/release-2.0.0-arm64-obligations/DAVE.app`, version 2.0.0, arm64,
+App: `build/release-2.0.0-arm64-obligations/DAVE.app`, version 2.0.0, arm64,
 Kartik Mandar Developer ID, code identity
 `e23b4f6d1700d628f1540257d24afa78f37a1531`. Implementation source commit is
-`90db6da19cff2f721781047a725687ea62072ac5`; current CI is
-https://github.com/kartikmandar/dave/actions/runs/41033664639.
+`90db6da19cff2f721781047a725687ea62072ac5`. Cross-platform verification fixes
+through f37f1896fbdcb4fede06ba28d35b9f5f6a922cec passed Linux, macOS, Windows and
+security CI: https://github.com/kartikmandar/dave/actions/runs/41035296804.
+The source companion includes these verification updates as a documented patch.
+The public distribution ZIP excludes AppleDouble metadata; real ticket and
+Gatekeeper validation pass without resource forks or extended attributes.
 All 1,004 native signatures passed. A read-only /tmp candidate passed the full
 Stingray import/light-curve/PDS/CSV/PNG/PDF/workspace workflow in 51.5 seconds,
 with checkout/Homebrew reads denied. The rendered PDF retains the same image,
 portrait A4 page and margins; its parser reports no JavaScript, forms or encryption.
-All 27 browser regressions and 18 release-safety tests pass.
+All 27 browser regressions and 20 release-safety tests pass.
+
+Apple accepted submission `24d53508-003b-40f4-8ad1-444ecff9d09a`, status code 0,
+with one AppleDouble packaging warning and no errors. The successful upload is
+acknowledged; its archive hash matches Apple's log. The earlier SIGBUS-failed allocation b3dd8519-c175-49d0-9d75-c82d1fff6abc
+is not used as acceptance evidence. All nested signatures, hardened runtime,
+stapled ticket and Gatekeeper checks passed before and after final ZIP extraction.
+The extracted app retains code identity e23b4f6d1700d628f1540257d24afa78f37a1531.
+
+Final assets: `build/release-2.0.0-arm64-obligations-final-clean`.
+App ZIP SHA-256: `7e0c263be7da58004786a76a7979bbab1fe1339bc6f85f2b1e798fceb57a9e61`.
+A read-only final extraction passed the complete workflow in 41.8 seconds,
+with checkout/Homebrew reads denied. Its 288 light-curve and 15 PDS CSV rows match
+the independent clean-Mac references within 1e-6; PNG/PDF plot content, log controls,
+shutdown and fresh workspace reopen passed. All 200 web asset hashes, internal/
+companion notice hashes, source and downloadable archive hashes pass.
+
 
 Actual shipped changes: Async 2.6.4 replaces vulnerable 2.5.0; MathJax 2.7.9 plus
 local TeX/accessibility modules and Safe configuration replaces 2.7.0. Obsolete
@@ -61,7 +81,7 @@ full scientific/workspace workflow on a clean Mac. Keep the release as a draft.
 
 ## Previous browser-component replacement draft app
 
-The current app is `build/release-2.0.0-arm64-licensed-export/DAVE.app`, code identity
+The superseded app is `build/release-2.0.0-arm64-licensed-export/DAVE.app`, code identity
 `eeeb5e4bcfac8456317be12c7eec57b1a27de608`. Apple accepted submission
 `2752730b-1768-4dbe-97fe-564707c6003d`, status code 0, with no issues. All 1,004 native
 signatures, hardened runtime, stapled ticket and Gatekeeper verification passed.

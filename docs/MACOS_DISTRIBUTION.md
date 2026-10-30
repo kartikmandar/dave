@@ -374,6 +374,33 @@ notices. The existing Help > View License menu opens the local license/notice pa
 in packaged builds. Full notices remain available inside the app after moving it
 to Applications. Preserve the companion source archive alongside each binary.
 
-These engineering review items are resolved in the new source; new candidate
-notarization and final archive validation are pending. The separate physical
+These engineering review items are resolved in the new source and final
+notarized app; acceptance and final archive validation are recorded below. The separate physical
 clean-Mac acceptance test remains open, and the release stays a draft.
+
+
+### Final reviewed runtime/browser distribution, 2026-10-30
+
+Apple accepted 24d53508-003b-40f4-8ad1-444ecff9d09a with status 0 and one AppleDouble packaging warning (no errors). Its
+successful regional upload is acknowledged and Apple's archive SHA matches.
+The first SIGBUS-failed allocation is retained as diagnostic evidence only.
+The current signed/stapled app is `build/release-2.0.0-arm64-obligations/DAVE.app`,
+code identity e23b4f6d1700d628f1540257d24afa78f37a1531. Native signatures, hardened
+runtime, ticket and Gatekeeper passed before and after final extraction.
+
+Final folder: `build/release-2.0.0-arm64-obligations-final-clean`.
+App ZIP SHA-256: `7e0c263be7da58004786a76a7979bbab1fe1339bc6f85f2b1e798fceb57a9e61`.
+The final read-only extraction passed the full Stingray workflow in 41.8 s,
+including real PNG/PDF content, log controls and workspace reopen. All 288 LC and
+15 PDS rows match independent references; all 200 web hashes and notice/source/
+archive checksums pass. The prepared obligations clean-Mac kit checks this same
+code identity; the physical browser-download/offline Finder test remains not run.
+
+Binary source is 90db6da19cff2f721781047a725687ea62072ac5; verification fixes through
+f37f1896fbdcb4fede06ba28d35b9f5f6a922cec passed all-platform/security CI 41035296804
+and accompany the exact binary source snapshot as a documented patch. Shared-library
+replacement was independently built and executed, not merely inferred. Runtime
+source engineering obligations and legacy advisory disposition are complete.
+Retain the one explicit maintainer-disputed MathJax exception and keep the source
+companion available alongside the binary. The release remains a draft for the
+separate clean-Mac acceptance test. Earlier artifact descriptions are historical.

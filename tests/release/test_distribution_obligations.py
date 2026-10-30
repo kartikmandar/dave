@@ -1,6 +1,9 @@
 """Safety regressions for vendor inventories, source notices and private copies."""
 import hashlib
 import runpy
+import subprocess
+import sys
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -52,3 +55,17 @@ def test_vendor_inventory_uses_portable_nested_paths(tmp_path):
     file.write_text("original")
     manifest = {"files": {"nested/vendor.js": hashlib.sha256(file.read_bytes()).hexdigest()}, "reviewedOn": "2026-10-30", "advisoryExceptions": []}
     assert audit(manifest, tmp_path)["errors"] == []
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="Uses the macOS distribution ZIP tool")
+def test_app_zip_preserves_ticket_file_without_appledouble_metadata(tmp_path):
+    app = tmp_path / "DAVE.app"
+    contents = app / "Contents"
+    contents.mkdir(parents=True)
+    (contents / "CodeResources").write_bytes(b"ticket-file-fixture")
+    subprocess.run(["xattr", "-w", "com.example.dave-test", "metadata", str(app)], check=True)
+    archive = tmp_path / "app.zip"
+    runpy.run_path(str(ROOT / "scripts/macos-release.py"))["zip_app"](app, archive)
+    with zipfile.ZipFile(archive) as package:
+        assert package.read("DAVE.app/Contents/CodeResources") == b"ticket-file-fixture"
+        assert not any("__MACOSX" in name.split("/") for name in package.namelist())

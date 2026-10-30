@@ -193,7 +193,7 @@ def verify(app):
 def zip_app(app, archive):
     if archive.exists():
         raise ValueError(f"Refusing to overwrite {archive}")
-    run("/usr/bin/ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", app, archive)
+    run("/usr/bin/ditto", "-c", "-k", "--norsrc", "--noextattr", "--keepParent", app, archive)
 
 
 def parse_notary_result(process, output):
