@@ -5,7 +5,10 @@ under GPL-3.0, and GCC runtime libraries under GPL-3.0 with the GCC Runtime Libr
 Exception 3.1. These licenses apply to those components, independently of DAVE's
 Apache-2.0 license. Python's Readline extension links to GNU Readline. Python's
 PSF notices and the GPL terms for the linked Readline component accompany it.
-FreeType is distributed under its FreeType License option.
+FreeType is distributed under its FreeType License option. Electron additionally
+includes FFmpeg under LGPL-2.1-or-later and WebKit-derived Blink files under their
+file-specific BSD/LGPL-2.0/2.1 terms. Those engine/media obligations are included
+in this review, independently of the conda package inventory.
 
 The full copyright notices and licenses are in THIRD_PARTY_NOTICES inside the app
 and beside it in the distribution ZIP. GNU libiconv copyright belongs to the
@@ -29,7 +32,16 @@ sources and zlib. It includes the exact conda-forge build recipes, declared
 patches, build configuration, scripts and source manifests. Python and ncurses
 sources accompany the Readline-linked Python extension. DAVE's source snapshot,
 dependency lock, relocation and packaging scripts are included as well; see its
-recorded source commit and file hashes. Machine-specific caches, credentials,
+recorded source commit and file hashes. The electron-chromium directory contains exact
+FFmpeg and Blink product source archives, the full Electron source archive with
+its FFmpeg patch, Chromium GN/build files, the applicable macOS arm64 FFmpeg
+configurations, and complete dependency pins. It also supplies Mozilla-derived
+URL/certificate sources conservatively. Electron is 43.8.4 (21d45d34fab5df606a08487790f691b4f4911e65),
+Chromium is 150.0.7871.250 (f916f1b7136907af19d96b95b891533d091d932a),
+and FFmpeg is ad41607c61898cf7150e0fb20fe4bbabd44922a3. Both macOS arm64
+FFmpeg configurations disable GPL, nonfree and version-3 build flags. Full
+licenses and source headers remain intact. Non-product Blink manual/performance/
+web-test fixtures are omitted; renderer/public/common/tools sources are supplied. Machine-specific caches, credentials,
 private signing material and user workspaces are excluded.
 
 Conda-forge supplied the native binaries. DAVE changes native load paths to make
@@ -70,3 +82,22 @@ it does not change any upstream license or certify an untested platform.
 Primary license texts: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html,
 https://www.gnu.org/licenses/gpl-3.0.html and
 https://www.gnu.org/licenses/gcc-exception-3.1.html.
+
+
+## Electron/Chromium shared-library replacement
+
+FFmpeg is a separate libffmpeg.dylib; Blink facilities reside in the shared
+Electron Framework. Compatible replacement of either library is permitted.
+scripts/replace-electron-library.py creates a fresh private app copy and locally
+signs the replacement, framework, every loading Electron helper and outer app.
+Signing helpers is necessary: leaving their Developer ID library validation
+unchanged rejects the recipient's new library. The publisher key is not needed.
+
+A recipient-built compatible replacement/re-export shim for each library was
+compiled and installed in a private copy. Both constructors were observed during
+real app startup, and the complete scientific/export/workspace workflow passed
+in 25.0 seconds. This demonstrates the shared-library replacement mechanism; it
+is not a claim that the complete Chromium engine was independently rebuilt.
+The independent libiconv source rebuild is separate evidence described above.
+See ELECTRON_SOURCE_REBUILD.md for exact source pins, build instructions and
+replacement commands. The official engine/media binaries are unchanged.

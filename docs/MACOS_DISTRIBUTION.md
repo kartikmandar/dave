@@ -404,3 +404,22 @@ source engineering obligations and legacy advisory disposition are complete.
 Retain the one explicit maintainer-disputed MathJax exception and keep the source
 companion available alongside the binary. The release remains a draft for the
 separate clean-Mac acceptance test. Earlier artifact descriptions are historical.
+
+
+## Electron/Chromium copyleft source closure before draft promotion
+
+The all-platform Chromium credit list prompted an additional actual-Mac review.
+FFmpeg and WebKit-derived Blink sources are now included, independently of the
+conda inventory: exact FFmpeg revision/configuration, complete Blink product
+sources, full Electron source and patch series, Chromium GN/build files and
+immutable dependency pins. Mozilla URL/certificate source is included
+conservatively; Android/Windows/Linux-only entries are classified separately.
+Source archives are hash checked on cache reuse. See ELECTRON_SOURCE_REBUILD.md.
+
+Actual recipient-built compatible FFmpeg/framework replacement shims loaded in
+a private locally signed copy; all loading helpers must also be locally signed.
+The full scientific/export/workspace workflow passed in 25.0 s. No full independent
+Chromium build is claimed. The official native engine/media binaries are unchanged.
+The new variant only updates in-app license/source notices, so it is resealed and
+notarized before refreshing the draft. The earlier staged .pending assets must
+not be promoted. The separate clean-Mac acceptance test remains not run.

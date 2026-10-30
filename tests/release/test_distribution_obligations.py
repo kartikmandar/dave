@@ -1,4 +1,5 @@
 """Safety regressions for vendor inventories, source notices and private copies."""
+
 import hashlib
 import runpy
 import subprocess
@@ -17,7 +18,11 @@ replace = runpy.run_path(str(ROOT / "scripts/replace-runtime-library.py"))["repl
 def test_vendor_inventory_rejects_tampering_and_untracked_code(tmp_path):
     file = tmp_path / "vendor.js"
     file.write_text("original")
-    manifest = {"files": {"vendor.js": hashlib.sha256(file.read_bytes()).hexdigest()}, "reviewedOn": "2026-10-30", "advisoryExceptions": []}
+    manifest = {
+        "files": {"vendor.js": hashlib.sha256(file.read_bytes()).hexdigest()},
+        "reviewedOn": "2026-10-30",
+        "advisoryExceptions": [],
+    }
     assert audit(manifest, tmp_path)["errors"] == []
     file.write_text("modified")
     assert "Vendored hash mismatch" in str(audit(manifest, tmp_path)["errors"])
@@ -53,7 +58,11 @@ def test_vendor_inventory_uses_portable_nested_paths(tmp_path):
     folder.mkdir()
     file = folder / "vendor.js"
     file.write_text("original")
-    manifest = {"files": {"nested/vendor.js": hashlib.sha256(file.read_bytes()).hexdigest()}, "reviewedOn": "2026-10-30", "advisoryExceptions": []}
+    manifest = {
+        "files": {"nested/vendor.js": hashlib.sha256(file.read_bytes()).hexdigest()},
+        "reviewedOn": "2026-10-30",
+        "advisoryExceptions": [],
+    }
     assert audit(manifest, tmp_path)["errors"] == []
 
 
@@ -69,3 +78,24 @@ def test_app_zip_preserves_ticket_file_without_appledouble_metadata(tmp_path):
     with zipfile.ZipFile(archive) as package:
         assert package.read("DAVE.app/Contents/CodeResources") == b"ticket-file-fixture"
         assert not any("__MACOSX" in name.split("/") for name in package.namelist())
+
+
+def test_engine_replacement_rejects_existing_destination(tmp_path):
+    function = runpy.run_path(str(ROOT / "scripts/replace-electron-library.py"))["replace_library"]
+    with pytest.raises(ValueError, match="new .app"):
+        function(tmp_path, tmp_path / "libffmpeg.dylib", tmp_path)
+
+
+def test_engine_replacement_rejects_unrelated_library(tmp_path):
+    function = runpy.run_path(str(ROOT / "scripts/replace-electron-library.py"))["replace_library"]
+    with pytest.raises(ValueError, match="interface-compatible"):
+        function(tmp_path, tmp_path / "unrelated.dylib", tmp_path / "copy.app")
+
+
+def test_engine_source_cache_refuses_modified_archive(tmp_path):
+    fetch = runpy.run_path(str(ROOT / "scripts/collect-electron-sources.py"))["fetch"]
+    archive = tmp_path / "source.tar.gz"
+    archive.write_bytes(b"modified")
+    archive.with_name(archive.name + ".sha256").write_text("0" * 64)
+    with pytest.raises(ValueError, match="checksum mismatch"):
+        fetch("https://example.invalid/must-not-be-contacted", archive)

@@ -6,6 +6,7 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -22,14 +23,22 @@ def main():
     parser.add_argument("--notices", type=Path, required=True)
     parser.add_argument("--sources", type=Path, required=True)
     parser.add_argument("--cache", type=Path, default=Path("build/third-party-source-cache"))
-    parser.add_argument("--source-commit", required=True, help="Full Git commit matching the packaged DAVE source")
+    parser.add_argument(
+        "--source-commit", required=True, help="Full Git commit matching the packaged DAVE source"
+    )
     parser.add_argument("--replacement-evidence", required=True, type=Path)
     args = parser.parse_args()
     if not re.fullmatch(r"[0-9a-f]{40}", args.source_commit):
         parser.error("Use a full source commit")
     replacement = json.loads(args.replacement_evidence.read_text())
-    if not replacement.get("modifiedLibraryLoaded") or not replacement.get("workflowPassed"):
-        parser.error("A real modified-library load and full workflow must pass first")
+    if (
+        not replacement.get("modifiedLibraryLoaded")
+        or not replacement.get("workflowPassed")
+        or not replacement.get("engineReplacementValidated")
+    ):
+        parser.error(
+            "Real runtime and engine shared-library replacements and full workflows must pass first"
+        )
     if args.sources.exists():
         parser.error("Use a new source directory; existing evidence is preserved")
     runtime = json.loads((args.notices / "runtime-components.json").read_text())
@@ -49,7 +58,11 @@ def main():
     packages = {record["name"]: record for record in runtime["condaPackages"]}
     sources = []
     for record in resolutions["resolutions"]:
-        selected = [source for source in record.get("sources", []) if source["copyleftSource"] or source.get("runtimeSourceDependency")]
+        selected = [
+            source
+            for source in record.get("sources", [])
+            if source["copyleftSource"] or source.get("runtimeSourceDependency")
+        ]
         if not selected:
             continue
         package = packages[record["name"]]
@@ -68,22 +81,68 @@ def main():
             if not destination.exists():
                 shutil.copyfile(archive, destination)
             sources.append({"package": identifier, **source})
-    source_files = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", args.source_commit], text=True).splitlines()
-    omitted = [name for name in source_files if re.search(r"(^|/)(\.env($|\.)|credentials($|\.))|\.(pem|key|p8|p12)$", name)]
+    subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).with_name("collect-electron-sources.py")),
+            "--notices",
+            str(args.notices),
+            "--sources",
+            str(args.sources),
+        ],
+        check=True,
+    )
+    source_files = subprocess.check_output(
+        ["git", "ls-tree", "-r", "--name-only", args.source_commit], text=True
+    ).splitlines()
+    omitted = [
+        name
+        for name in source_files
+        if re.search(r"(^|/)(\.env($|\.)|credentials($|\.))|\.(pem|key|p8|p12)$", name)
+    ]
     included = [name for name in source_files if name not in omitted]
     snapshot = args.sources / "DAVE-source.tar.gz"
-    subprocess.run(["git", "archive", "--format=tar.gz", "--prefix=DAVE-source/", "--output=" + str(snapshot.resolve()), args.source_commit, "--", *included], check=True)
-    (args.sources / "source-snapshot-omissions.json").write_text(json.dumps({"reason": "Excluded credential/environment filenames without reading their contents", "paths": omitted}, indent=2) + "\n")
+    subprocess.run(
+        [
+            "git",
+            "archive",
+            "--format=tar.gz",
+            "--prefix=DAVE-source/",
+            "--output=" + str(snapshot.resolve()),
+            args.source_commit,
+            "--",
+            *included,
+        ],
+        check=True,
+    )
+    (args.sources / "source-snapshot-omissions.json").write_text(
+        json.dumps(
+            {
+                "reason": "Excluded credential/environment filenames without reading their contents",
+                "paths": omitted,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
     (args.sources / "DAVE-source-commit.txt").write_text(args.source_commit + "\n")
-    for name in ("RUNTIME_SOURCE_OBLIGATIONS.md", "LGPL_REBUILD_EXAMPLE.md"):
+    for name in (
+        "RUNTIME_SOURCE_OBLIGATIONS.md",
+        "LGPL_REBUILD_EXAMPLE.md",
+        "ELECTRON_SOURCE_REBUILD.md",
+    ):
         shutil.copyfile(Path(__file__).resolve().parents[1] / "docs" / name, args.sources / name)
     shutil.copyfile(args.replacement_evidence, args.sources / "replacement-validation.json")
-    shutil.copyfile(args.notices / "runtime-components.json", args.sources / "runtime-components.json")
+    shutil.copyfile(
+        args.notices / "runtime-components.json", args.sources / "runtime-components.json"
+    )
     (args.sources / "source-manifest.json").write_text(json.dumps(sources, indent=2) + "\n")
     (args.sources / "README.md").write_text("""# DAVE 2.0.0 bundled runtime sources
 
 These hash-verified upstream archives and exact conda-forge build recipes/patches
-correspond to the shipped readline, libiconv, Python, ncurses and GCC runtime packages. GCC build
+correspond to the shipped readline, libiconv, Python, ncurses and GCC runtime packages. The
+electron-chromium directory adds FFmpeg, Blink product sources, the full Electron
+source archive and patches, Chromium build files and all dependency pins. GCC build
 sources also include zlib. See source-manifest.json for package builds, download
 URLs, hashes and patches; recipes contain build scripts and rendered requirements.
 The binaries are conda-forge builds, relocated for DAVE by the public packaging
@@ -116,9 +175,10 @@ binary release; do not rely on transient upstream links as the sole source offer
         "freetypeLicenseSelection": "FTL",
         "unresolvedRedistributionRights": web["unresolvedRedistributionRights"],
         "firstPartyReplacements": web.get("firstPartyReplacements", []),
-        "sourceReview": "Engineering obligations review complete: exact sources/recipes/patches, Python/Readline dependencies, source snapshot, modification rights and tested LGPL shared-library replacement supplied. Byte-for-byte rebuild of all scientific packages is not claimed.",
+        "sourceReview": "Engineering obligations review complete: exact runtime and Electron/Chromium copyleft sources/recipes/patches, Python/Readline dependencies, source snapshot, modification rights and tested runtime/engine/media shared-library replacement supplied. Byte-for-byte rebuild of all scientific packages is not claimed.",
         "sourceCommit": args.source_commit,
         "replacementValidation": replacement,
+        "electronSourceManifest": "electron-chromium/source-manifest.json",
         "publicationHolds": ["separate clean-Mac acceptance test"],
     }
     (args.notices / "review.json").write_text(json.dumps(review, indent=2) + "\n")
@@ -137,7 +197,7 @@ Oxanium SemiBold by Severin Meyer replaces the former font with unconfirmed redi
 authorization. It is bundled unmodified under OFL-1.1, with its copyright, license
 and pinned upstream source recorded inside the app and in these notices.
 
-The inventories describe the actual notarized Apple Silicon app: 253 conda
+The inventories describe the reviewed Apple Silicon app: 253 conda
 packages, 138 Python distributions (overlapping conda packages), 48 production
 npm packages and Electron 43.8.4. Package license texts, copyright notices,
 Chromium notices, exact conda recipes and hashes are included. Collection does
@@ -170,9 +230,15 @@ modified libiconv. The evidence does not certify a byte-for-byte rebuild of ever
 DAVE source, relocation scripts and the dependency lock are in the release commit
 at https://github.com/kartikmandar/dave (modernization-2025).
 
+The electron-chromium source directory includes exact FFmpeg/Blink product sources,
+Electron patches/build configuration and pinned dependencies. Compatible FFmpeg
+and Electron Framework replacement has been executed without the publisher key.
+The full corresponding runtime/engine sources accompany the binary; the source
+manifest records scope and does not claim a full independent Chromium rebuild.
+
 Electron/Chromium notices restored here were missing from the app's original
-resource directory. This folder accompanies DAVE.app at the ZIP root; the signed
-application and notarization ticket are unchanged. Keep the folder with any copy
+resource directory. These notices are bundled inside the app before signing and also accompany
+DAVE.app at the ZIP root. No signed app files are changed after notarization. Keep the folder with any copy
 of the distributed archive. review.json records remaining holds explicitly.
 """)
     for directory in (args.notices, args.sources):

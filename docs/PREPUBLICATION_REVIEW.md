@@ -2,9 +2,35 @@
 
 Status: **draft; clean-Mac acceptance remains open**. Runtime-source engineering
 obligations and the legacy browser advisory review are resolved in the new source
-and signed app described below. Apple accepted the new submission; stapling,
-Gatekeeper and the final ZIP extraction checks passed. Existing UI and workflows
-remain. The separate physical clean-Mac acceptance test is still not run.
+and app source described below. An additional engine/media source closure was
+completed before draft promotion; its in-app notice update is being signed and
+notarized. Earlier accepted app/archive evidence remains historical. Existing UI
+and workflows remain. The separate physical clean-Mac acceptance test is still not run.
+
+## Additional Electron/Chromium source closure
+
+The final Chromium-credit audit found that the conda-focused source packet also
+needed the actually shipped FFmpeg and WebKit-derived Blink components. The draft
+assets were held before promotion. Exact FFmpeg/Blink product sources, full
+Electron source/patches, Chromium GN/build files and immutable dependency pins
+are now collected, with conservative Mozilla URL/certificate source coverage.
+FFmpeg's Chrome/Chromium macOS arm64 configs have GPL/NONFREE/VERSION3 disabled.
+Source versions and rebuild instructions are in ELECTRON_SOURCE_REBUILD.md.
+
+Recipient-compiled compatible replacement/re-export shims for libffmpeg and the
+Electron Framework were loaded in a private app. Both startup markers were
+observed; locally signing all loading helpers resolved library validation without
+the publisher key. The entire scientific/export/workspace workflow passed in
+25.0 seconds. This is a tested replacement mechanism, not a full independent
+Chromium build; the libiconv independent source build remains separate evidence.
+
+The new app variant adds explicit engine/media notice and source-availability
+text inside its existing license page. It requires a new signature/notarization;
+the previous accepted candidate below remains historical until that refresh.
+Scientific UI, library code, analysis and workspace workflows are unchanged.
+All 27 browser and 23 release-safety regressions pass. The source assembler now
+requires engine replacement evidence and collects engine copyleft sources, so a
+conda-only source packet cannot silently pass this review again.
 
 ## Final runtime-source and browser advisory review app
 
