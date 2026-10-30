@@ -244,18 +244,59 @@ browser download/install test and third-party notice review remain release
 checklist items. Intel and older macOS versions have not been validated.
 
 
-## Pre-publication notice container and acceptance kit
+## Intermediate Oxanium candidate and acceptance kit, 2026-10-30
 
-The original notarized app above is retained unchanged as historical evidence.
-The current draft ZIP includes `THIRD_PARTY_NOTICES` alongside that same app and
-is staged in `build/release-2.0.0-arm64-prepublication`. Its checksum is tracked in
-`docs/releases/2.0.0-macos-arm64.SHA256SUMS`. The accompanying runtime source archive
-and clean-Mac kit have independent hashes in `ASSET_SHA256SUMS`.
+The initial notarized app above is retained as historical evidence. The owner
+authorized replacing Archangelsk after no redistribution permission could be
+confirmed. The current candidate uses unmodified Oxanium SemiBold under OFL-1.1,
+with the full license, copyright, pinned source URLs and hashes inside the app.
+Splash/navbar brand size, position and colors are retained, along with all other
+UI controls and scientific workflows.
 
-See [PREPUBLICATION_REVIEW.md](PREPUBLICATION_REVIEW.md) for build dependency fixes,
-notice provenance, unresolved redistribution permissions, source obligations and
-vendored-browser advisory review limits. See [CLEAN_MAC_INSTALL_TEST.md](CLEAN_MAC_INSTALL_TEST.md)
-for the prepared separate-machine acceptance test. These are explicit publication
-holds; the release remains a draft. The notices container does not alter the
-signed app or require a new Apple submission. Always verify the extracted app's
-signature, stapled ticket, Gatekeeper assessment and unchanged code identity.
+The replacement app is staged at
+`build/release-2.0.0-arm64-oxanium-candidate/DAVE.app`. Apple accepted submission
+`1456fc85-02e0-4e79-a6a0-dd989e9baeee`, with status code 0 and no issues. The ticket
+is stapled and validates; Gatekeeper accepts Notarized Developer ID. Its signed
+code identity is `d415aa38bfe9c1e238cb138d6603c633d9708afa`.
+
+The intermediate container was prepared in
+`build/release-2.0.0-arm64-oxanium-prepublication`, with THIRD_PARTY_NOTICES beside
+the app. `docs/releases/2.0.0-macos-arm64.SHA256SUMS` tracks its app ZIP checksum.
+ASSET_SHA256SUMS also covers the companion runtime sources and clean-Mac kit.
+This is a fresh signed/notarized font build; the earlier notices-only container
+and its checksum are superseded.
+
+See [PREPUBLICATION_REVIEW.md](PREPUBLICATION_REVIEW.md) for dependency remediation,
+notice provenance and remaining publication holds. See
+[CLEAN_MAC_INSTALL_TEST.md](CLEAN_MAC_INSTALL_TEST.md) for the prepared separate-Mac
+test. Logger.js/Canvas2Image provenance, final source/runtime advisory disposition
+and the separate clean-Mac test remain open. The release stays a draft.
+
+
+## Final version-stamped candidate, accepted 2026-10-30
+
+The final signed copy is
+`build/release-2.0.0-arm64-oxanium-versioned-candidate/DAVE.app`, with code identity
+`4dc0eb342b3ec269c5cd6e57adc762db8cd6a812`. Its packaged splash displays Version: 2.0.0;
+development's label remains unchanged. Preflight rejects a missing or mismatched
+packaged label, and all 13 release-safety regressions pass. Code commit 5f205bf
+passed Linux, macOS, Windows and security CI:
+https://github.com/kartikmandar/dave/actions/runs/40991526221.
+
+Apple accepted final submission `dd056b04-f6f3-41f1-ad80-43251827f610`, with status
+code 0 and no issues. Its ticket is stapled and Gatekeeper accepts Notarized
+Developer ID. The initial accelerated transfer had aborted with an S3 timeout;
+its allocated record 793274c2-8c8a-417e-b29f-5367e0c9b2fc is not used as proof of
+a successful upload. The cached archive was extracted and its deep signatures
+and code identity checked before the regional retry. Apple's endpoint guidance:
+https://developer.apple.com/documentation/security/customizing-the-notarization-workflow.
+
+The final distribution is staged in `build/release-2.0.0-arm64-final`, with
+THIRD_PARTY_NOTICES beside the app, a runtime-source companion and the standalone
+`build/clean-mac-test-kit-final`. Source, notice and app checksums are verified
+after extraction and against GitHub's uploaded asset digests. The clean-Mac kit
+checks the final 4dc0eb342b3ec269c5cd6e57adc762db8cd6a812 identity.
+
+The earlier candidates above remain historical evidence and are superseded.
+The release remains a draft: Logger.js/Canvas2Image provenance, final source and
+legacy runtime advisory disposition, and the separate clean-Mac test remain open.
