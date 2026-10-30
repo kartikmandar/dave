@@ -15,6 +15,7 @@ import os
 import shutil
 from io import BytesIO
 
+import numpy as np
 import pytest
 
 import utils.dataset_cache as DsCache
@@ -942,28 +943,41 @@ def test_get_lomb_scargle_results_covers_requested_frequencies(client):
     assert data[2]["values"] == [1024.0]
 
 
-def test_get_fit_lomb_scargle_result_returns_parameters(client):
-    """Fitting a constant to the Lomb-Scargle powers returns an estimate."""
-    response = client.post(
-        "/get_fit_lomb_scargle_result",
-        json={
-            "filename": "test.evt",
-            "bck_filename": "",
-            "gti_filename": "",
-            "filters": [],
-            "axis": EVENTS_AXIS,
-            "dt": 16.0,
-            "freq_range": [0.001, 0.03],
-            "nyquist_factor": 1,
-            "ls_norm": "standard",
-            "samples_per_peak": 5,
-            "models": [{"type": "Const", "amplitude": 0.05}],
-        },
-    )
+@pytest.fixture
+def stingray_fit_seed():
+    """Keep Stingray's random fit-start jitter reproducible and isolated."""
+    state = np.random.get_state()  # noqa: NPY002 -- third-party fitter uses the legacy RNG
+    np.random.seed(0)  # noqa: NPY002 -- match the real fitter without replacing it
+    try:
+        yield
+    finally:
+        np.random.set_state(state)  # noqa: NPY002 -- do not perturb other scientific tests
+
+
+def test_get_fit_lomb_scargle_result_returns_parameters(client, stingray_fit_seed):
+    """The real constant fit agrees with the mean power (its analytic MLE)."""
+    payload = {
+        "filename": "test.evt",
+        "bck_filename": "",
+        "gti_filename": "",
+        "filters": [],
+        "axis": EVENTS_AXIS,
+        "dt": 16.0,
+        "freq_range": [0.001, 0.03],
+        "nyquist_factor": 1,
+        "ls_norm": "standard",
+        "samples_per_peak": 5,
+        "models": [{"type": "Const", "amplitude": 0.05}],
+    }
+    response = client.post("/get_fit_lomb_scargle_result", json=payload)
     assert response.status_code == 200
     params = response.get_json()[0]["values"]
     assert params[0]["name"] == "amplitude"
     assert params[0]["opt"] > 0
+    spectrum = client.post("/get_lomb_scargle_results", json=payload)
+    assert spectrum.status_code == 200
+    mean_power = np.mean(spectrum.get_json()[1]["values"])
+    assert params[0]["opt"] == pytest.approx(mean_power, rel=1e-3)
 
 
 def test_get_bootstrap_results_reports_no_parameters_yet(client):
