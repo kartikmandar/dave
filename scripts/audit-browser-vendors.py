@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def audit(manifest, directory, live=False):
     errors = []
-    actual = {str(file.relative_to(directory)): file for file in directory.rglob("*") if file.is_file()}
+    actual = {file.relative_to(directory).as_posix(): file for file in directory.rglob("*") if file.is_file()}
     if set(actual) != set(manifest["files"]):
         errors.append("Vendored tree inventory changed; review additions and removals")
     for name, expected in manifest["files"].items():

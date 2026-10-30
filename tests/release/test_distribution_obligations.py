@@ -43,3 +43,12 @@ def test_private_replacement_rejects_existing_destination_before_external_tools(
 def test_private_replacement_rejects_unrelated_library(tmp_path):
     with pytest.raises(ValueError, match="interface-compatible"):
         replace(tmp_path, tmp_path / "unrelated.dylib", tmp_path / "copy.app")
+
+
+def test_vendor_inventory_uses_portable_nested_paths(tmp_path):
+    folder = tmp_path / "nested"
+    folder.mkdir()
+    file = folder / "vendor.js"
+    file.write_text("original")
+    manifest = {"files": {"nested/vendor.js": hashlib.sha256(file.read_bytes()).hexdigest()}, "reviewedOn": "2026-10-30", "advisoryExceptions": []}
+    assert audit(manifest, tmp_path)["errors"] == []
