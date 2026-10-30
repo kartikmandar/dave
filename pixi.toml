@@ -72,6 +72,7 @@ frontend-clean = "rm -rf src/main/resources/static/dist"
 
 # Release tooling checks
 test-build-tools = "node --test tests/release/build-tools.test.cjs"
+test-release-tools = "python -m pytest tests/release -q"
 audit-build-deps = "node scripts/audit-build-dependencies.cjs build/third-party-review/dependency-audits"
 
 # Utility tasks

@@ -98,6 +98,13 @@ def preflight(app, node):
     manifest = json.loads((resources / "runtime.json").read_text())
     if manifest.get("layout") != "immutable-v1" or (resources / "python-runtime.tar.gz").exists():
         raise ValueError("Rebuild with the immutable runtime layout before signing")
+    splash_version_file = resources / "resources/static/scripts/version.js"
+    splash_version_text = splash_version_file.read_text() if splash_version_file.is_file() else ""
+    splash_version = re.fullmatch(
+        r"""\s*BUILD_VERSION\s*=\s*(['"])([^'"]+)\1\s*;\s*""", splash_version_text
+    )
+    if not splash_version or splash_version.group(2) != version:
+        raise ValueError("Packaged splash version differs from the bundle version")
     metadata = json.loads(run(node, ROOT / "scripts/macos-sign.cjs", "inspect", app))
     if metadata.get("unexpectedFiles"):
         raise ValueError("Unexpected credential filenames in the packaged JavaScript application")
@@ -134,6 +141,7 @@ def preflight(app, node):
                 raise ValueError(f"Symlink escapes app: {file}")
     return {
         "version": version,
+        "splashVersion": splash_version.group(2),
         "bundleId": info["CFBundleIdentifier"],
         **metadata,
         "policyReviewed": "2026-10-29",

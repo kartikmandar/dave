@@ -65,6 +65,25 @@ class ReleaseSafetyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "immutable runtime"):
             release.preflight(app, "a-node-executable-that-must-not-run")
 
+    def test_development_splash_label_is_rejected_before_tools_run(self):
+        app = self.directory / "DAVE.app"
+        resources = app / "Contents/Resources"
+        scripts = resources / "resources/static/scripts"
+        scripts.mkdir(parents=True)
+        (resources / "runtime.json").write_text('{"layout":"immutable-v1"}')
+        (scripts / "version.js").write_text("BUILD_VERSION='DEV VERSION';\n")
+        (app / "Contents/Info.plist").write_bytes(
+            plistlib.dumps(
+                {
+                    "CFBundleShortVersionString": "2.0.0",
+                    "CFBundleVersion": "2.0.0",
+                    "CFBundleIdentifier": "science.stingray.dave",
+                }
+            )
+        )
+        with self.assertRaisesRegex(ValueError, "splash version"):
+            release.preflight(app, "a-node-executable-that-must-not-run")
+
     def test_existing_archive_is_never_overwritten(self):
         archive = self.directory / "release.zip"
         archive.write_bytes(b"previous release")

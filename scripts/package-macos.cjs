@@ -51,6 +51,9 @@ packager({
     fs.cpSync(runtime, path.join(buildPath, 'DAVE.app/Contents/Resources/python-runtime'), {
       recursive: true, verbatimSymlinks: true,
     });
+    // Stamp the staged resource, leaving development's label unchanged.
+    fs.writeFileSync(path.join(buildPath, 'DAVE.app/Contents/Resources/resources/static/scripts/version.js'),
+      'BUILD_VERSION=' + JSON.stringify(appVersion) + ';\n');
   }],
   extraResource: [manifest, stagedPython, path.join(root, 'src/main/resources'), path.join(root, 'LICENSE')],
 }).then(paths => {

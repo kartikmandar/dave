@@ -31,6 +31,10 @@ jobs:
     - name: Run build dependency regression tests
       run: pixi run test-build-tools
 
+    - name: Run macOS release safety tests
+      if: runner.os == 'macOS'
+      run: pixi run test-release-tools
+
     - name: Run Python linting
       run: pixi run lint
       
