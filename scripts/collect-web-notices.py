@@ -7,6 +7,13 @@ import subprocess
 from pathlib import Path
 
 SOURCES = [
+    (
+        "oxanium-2.000",
+        "OFL-1.1",
+        [
+            "https://raw.githubusercontent.com/sevmeyer/oxanium/a8f39e0c71186190027a093e9001459410192d1e/OFL.txt"
+        ],
+    ),
     ("jquery-4.0.0", "MIT", ["https://raw.githubusercontent.com/jquery/jquery/4.0.0/LICENSE.txt"]),
     (
         "jquery-ui-1.14.1",
@@ -152,11 +159,6 @@ def main():
                 )
     unresolved = [
         {
-            "component": "Archangelsk.ttf",
-            "reason": "Embedded Free font statement does not specify redistribution terms; author permission/license needed",
-            "origin": "http://www.podobin.atnet.ru",
-        },
-        {
             "component": "Logger.js (DAVE-customized)",
             "reason": "Copyright Song Ho Ahn; no explicit redistribution grant found in the bundled file or author page",
             "origin": "https://www.songho.ca/misc/logger/logger.html",
@@ -179,7 +181,7 @@ def main():
     from fontTools.ttLib import TTFont
 
     for filename in (
-        static / "fonts/Archangelsk.ttf",
+        static / "fonts/Oxanium-SemiBold.ttf",
         static / "font-awesome-4.7.0/fonts/FontAwesome.otf",
     ):
         font = TTFont(filename)

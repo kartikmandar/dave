@@ -27,7 +27,10 @@ async function main() {
   const entitlementFor = file => path.join(entitlements, file === interpreter ? 'python.plist' : 'electron.plist');
   // Individual Mach-O signatures are independent. Bound timestamp requests and
   // finish every file before sealing helper/framework/application containers.
-  const native = [...codeFiles];
+  // codesign treats an app's main executable as its entire bundle. Signing
+  // those paths concurrently races with nested-file signing; seal them only
+  // with their .app containers after all independent Mach-O files are ready.
+  const native = [...codeFiles].filter(file => !/\.app\/Contents\/MacOS\/[^/]+$/.test(file));
   let cursor = 0;
   await Promise.all(Array.from({ length: Math.min(8, native.length) }, async () => {
     while (cursor < native.length) {

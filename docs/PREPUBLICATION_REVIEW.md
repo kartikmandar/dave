@@ -1,8 +1,11 @@
 # DAVE 2.0.0 pre-publication review
 
-Status: **draft; not ready for publication**. The approved signed app remains
-unchanged. This batch changes dependency/build tooling, notices and acceptance
-materials; it does not change the UI, analysis settings or workspace behavior.
+Status: **draft; not ready for publication**. The owner authorized replacing
+Archangelsk after no original redistribution permission could be found. Oxanium
+SemiBold is bundled unmodified under OFL-1.1 with copyright, license and pinned
+source hashes. Splash/navbar brand sizes, colors and placement are retained;
+analysis settings, controls and workspace behavior are preserved. This resource
+change requires a fresh signed and notarized app.
 
 ## Build dependency remediation
 
@@ -52,7 +55,7 @@ https://github.com/advisories/GHSA-w3rx-r6r6-pgpr.
 
 ## Actual runtime notice review
 
-The collection is against `build/release-2.0.0-arm64-candidate/DAVE.app`, not merely
+The collection is against `build/release-2.0.0-arm64-oxanium-candidate/DAVE.app`, not merely
 the development lock. It inventories 253 conda packages, 138 Python distributions
 (overlapping conda packages), 48 production npm packages, Electron 43.8.4 and 162
 vendored web/font files. Exact package archives and upstream source archives are
@@ -77,16 +80,18 @@ and all declared patches. This has not been independently rebuilt. Review source
 completeness, LGPL relinking requirements and continuing source availability before
 public distribution; the collection is evidence, not blanket legal clearance.
 
-Three assets still lack adequate evidence of redistribution permission:
+Two assets still lack adequate evidence of redistribution permission:
 
 | Asset | Evidence gap | Required resolution |
 | --- | --- | --- |
-| Archangelsk.ttf, Podobin | Embedded text says only “Free font”; no explicit redistribution terms | Original author/license permission or separately approved replacement |
 | DAVE-customized Logger.js, Song Ho Ahn | Copyright/author page without a clear license grant | Author permission or separately approved compatible replacement |
 | Legacy Canvas2Image v0.1 | Stripped original header; another fork's MIT statement is insufficient provenance | Recover the exact original license or approve a compatible replacement |
 
-Existing assets are preserved. Keep the release private/draft while these items
-remain unresolved. The font provenance question has been raised with the owner.
+Logger.js and Canvas2Image remain intact. Keep the release private/draft while
+their provenance items remain unresolved. The owner explicitly authorized the font
+replacement. The old font is removed from the distribution, and Oxanium copyright
+and license accompany the new font inside the app as well as the companion notices.
+Source: https://github.com/sevmeyer/oxanium/tree/a8f39e0c71186190027a093e9001459410192d1e.
 
 This npm audit does **not** cover the vendored runtime Plotly 3.6.0, jsPDF 1.3.3,
 html2canvas 0.5.0-beta3 or legacy copies. Optional Vite dependency upgrades do not
@@ -103,10 +108,10 @@ Use the locked Pixi Python environment (PyYAML, fontTools, zstd support) and ins
 Electron build dependencies. Stage into new directories outside the signed app:
 
 ```sh
-pixi run python scripts/collect-runtime-notices.py --app build/release-2.0.0-arm64-candidate/DAVE.app --output build/third-party-review/THIRD_PARTY_NOTICES
-node scripts/collect-electron-notices.cjs build/release-2.0.0-arm64-candidate/DAVE.app build/third-party-review/THIRD_PARTY_NOTICES
+pixi run python scripts/collect-runtime-notices.py --app build/release-2.0.0-arm64-oxanium-candidate/DAVE.app --output build/third-party-review/THIRD_PARTY_NOTICES
+node scripts/collect-electron-notices.cjs build/release-2.0.0-arm64-oxanium-candidate/DAVE.app build/third-party-review/THIRD_PARTY_NOTICES
 pixi run python scripts/resolve-notice-sources.py --notices build/third-party-review/THIRD_PARTY_NOTICES
-pixi run python scripts/collect-web-notices.py --app build/release-2.0.0-arm64-candidate/DAVE.app --output build/third-party-review/THIRD_PARTY_NOTICES
+pixi run python scripts/collect-web-notices.py --app build/release-2.0.0-arm64-oxanium-candidate/DAVE.app --output build/third-party-review/THIRD_PARTY_NOTICES
 pixi run python scripts/prepare-distribution-notices.py --notices build/third-party-review/THIRD_PARTY_NOTICES --sources build/third-party-review/RUNTIME-SOURCES
 ```
 
@@ -118,8 +123,9 @@ and patch files. It records `publishable: false` in `review.json`.
 `assemble-draft-distribution.py --draft` requires the reviewed application code
 identity, validates signatures/ticket/Gatekeeper before and after ZIP extraction,
 verifies extracted notice hashes and builds companion source/test-kit assets.
-It has no publication operation. The app remains the original notarized binary;
-a changed container checksum does not imply that the app was rebuilt or re-notarized.
+It has no publication operation. The assembler requires the expected code identity of the newly signed candidate.
+The font replacement is a rebuilt/re-notarized binary; the former candidate is
+retained separately as historical evidence.
 
 ## Clean-Mac acceptance
 
@@ -137,7 +143,7 @@ writing diagnostic output inside the signed app is refused. Neither local checks
 nor an automated workflow substitute for a quarantined browser download and first
 Finder launch offline on a Mac without the checkout or development tools.
 
-## Executed checks for this batch
+## Initial tooling-batch checks (before the font replacement)
 
 - 554 Python tests, 16 browser regressions and the source Electron scientific
   workflow passed (16.4 seconds for the workflow).
@@ -157,3 +163,28 @@ Finder launch offline on a Mac without the checkout or development tools.
 - The clean-Mac result remains `not-run`. Its diagnostics correctly report the
   development copy's missing browser quarantine; CSV negative checks reject altered
   values, missing rows and NaNs, and output inside the app is refused.
+
+## Owner-authorized font replacement
+
+Archangelsk was removed and replaced with unmodified Oxanium SemiBold 2.000 from
+Severin Meyer's pinned upstream commit. The full OFL-1.1 license, copyright,
+source URLs and hashes accompany the font inside the app. Splash and navbar
+branding use the same dimensions, positions and colors; other controls are unchanged.
+Source-browser regression tests passed (16 tests), and a visual check confirmed
+that the font loads locally and the established plot/control layout is retained.
+
+Fresh signing exposed that codesign treats app main-executable paths as bundles.
+Those executables are now sealed with their app containers after the 999 other
+independent native files. All 1,004 native signatures then passed verification.
+The former signed candidate is retained separately; it is not modified in place.
+
+The full workflow exposed an intermittent debugger-controlled shutdown stall.
+The test helper now returns its debugger request, detaches the test inspector,
+and calls the real app.quit(). It still requires the actual child-process close
+event within 30 seconds. No app API is mocked and no forced exit substitutes for
+successful shutdown. The complete source workflow, including both shutdowns and
+fresh workspace recalculation, passed in 30.1 seconds after this change.
+
+Apple submission 1456fc85-02e0-4e79-a6a0-dd989e9baeee is in progress. Final ticket,
+archive and clean-Mac-kit identities will be updated only after acceptance and
+extracted-app verification. The separate clean-Mac test remains not run.

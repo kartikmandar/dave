@@ -3,8 +3,10 @@
    rules must link dave.css first. */
 
 @font-face {
-  font-family: Archangelsk;
-  src: url("../fonts/Archangelsk.ttf");
+  font-family: Oxanium;
+  src: url("../fonts/Oxanium-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
 }
 
 html, body {
@@ -43,7 +45,8 @@ h3 {
 }
 
 .navbar .navbar-brand {
-  font-family: Archangelsk;
+  font-family: Oxanium, Arial, sans-serif;
+  font-weight: 600;
   color: var(--brand);
   font-size: 20px;
   letter-spacing: 1px;

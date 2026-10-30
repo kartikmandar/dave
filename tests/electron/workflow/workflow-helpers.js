@@ -206,7 +206,20 @@ class WorkflowApp {
   async close() {
     try {
       if (this.app) {
-        await this.app.close();
+        // Return the inspector evaluation before quitting. Calling app.quit()
+        // synchronously inside a debugger request can stall its reply during
+        // Electron shutdown. Exercise the real quit path and require completion.
+        const closed = this.app.waitForEvent('close', { timeout: 30000 });
+        await Promise.all([
+          closed,
+          this.app.evaluate(({ app }) => {
+            setTimeout(() => {
+              // Detach the test debugger before exercising normal app shutdown.
+              process.getBuiltinModule('node:inspector').close();
+              app.quit();
+            }, 100);
+          }),
+        ]);
         this.app = null;
       }
     } finally {

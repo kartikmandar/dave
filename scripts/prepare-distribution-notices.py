@@ -96,11 +96,15 @@ binary release; do not rely on transient upstream links as the sole source offer
     (args.notices / "review.json").write_text(json.dumps(review, indent=2) + "\n")
     (args.notices / "README.md").write_text("""# DAVE 2.0.0 third-party notices — draft review
 
-PUBLICATION HOLD: redistribution terms remain unconfirmed for Archangelsk.ttf,
+PUBLICATION HOLD: redistribution terms remain unconfirmed for
 Song Ho Ahn Logger.js and the stripped legacy Canvas2Image v0.1. Their actual
 headers/font metadata are preserved. A different fork's MIT declaration does not
 establish permission for the shipped version. Do not publish until these items
 and the clean-Mac acceptance test are resolved. No existing UI asset was changed.
+
+Oxanium SemiBold by Severin Meyer replaces the former font with unconfirmed redistribution terms with owner
+authorization. It is bundled unmodified under OFL-1.1, with its copyright, license
+and pinned upstream source recorded inside the app and in these notices.
 
 The inventories describe the actual notarized Apple Silicon app: 253 conda
 packages, 138 Python distributions (overlapping conda packages), 48 production
@@ -124,7 +128,7 @@ metadata. lazy-val 1.0.5 declares MIT and author Vladimir Krivosheev; the upstre
 README and standard MIT terms accompany that declaration. The MIT terms also
 apply to the preserved explicit MIT declarations in Stefan Petre's Colorpicker
 and Start Bootstrap's SB Admin stylesheet; see their actual copyright headers.
-No such inferred grant is applied to the three unresolved assets.
+No such inferred grant is applied to the two unresolved assets.
 
 The companion DAVE-2.0.0-RUNTIME-SOURCES.tar.gz contains verified source archives
 and exact build recipes/patches for readline, libiconv and GCC runtime components.

@@ -33,6 +33,7 @@ def main():
     parser.add_argument("--sources", type=Path, required=True)
     parser.add_argument("--test-kit", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--expected-cdhash", required=True)
     parser.add_argument(
         "--draft", action="store_true", help="Required: these materials have publication holds"
     )
@@ -42,7 +43,7 @@ def main():
     if args.output.resolve().is_relative_to(args.app.resolve()):
         parser.error("Distribution output must be outside the signed app")
     original = identity(args.app)
-    if original != "CDHash=7e97e30c7e9ffa19bd9af3efea8933da8eb2693a":
+    if original != "CDHash=" + args.expected_cdhash:
         parser.error("App is not the reviewed notarized 2.0.0 candidate")
     review = json.loads((args.notices / "review.json").read_text())
     args.output.mkdir(parents=True)
