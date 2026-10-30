@@ -39,3 +39,13 @@ API/format references:
 The separate Electron/Python logger is unchanged. The remaining legacy browser
 vendor advisory review and final source obligations are tracked independently;
 this replacement is not a claim of whole-application security/legal clearance.
+
+
+`static/scripts/imagePDF.js` is also original DAVE code under Apache-2.0. It replaces
+jsPDF for the existing single-plot-image PDF action. It writes a PDF 1.3 catalog,
+page, JPEG image object, drawing stream and byte-counted cross-reference table.
+The same Plotly JPEG is fitted to the same portrait A4 page and 10 mm margins.
+There are no HTML, form, encryption, script or remote-resource paths. No MD5 code
+is included. Tests check actual pixels, PDF offsets, portrait fit and input rejection.
+The file is implemented from the format specification, not adapted from jsPDF:
+https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/pdfreference1.3.pdf.

@@ -32,3 +32,29 @@ test('MathJax keeps TeX SVG rendering local and filters javascript links',async(
   expect(requested.every(name=>name==='/empty'||name.startsWith('/MathJax/'))).toBe(true);
   expect(missing).toEqual([]);
 });
+
+test('single-image PDF has correct cross references, portrait bounds and no active content',async({page})=>{
+  await page.addScriptTag({path:path.join(scripts,'../imagePDF.js')});
+  const result=await page.evaluate(async()=>{
+    const canvas=document.createElement('canvas');canvas.width=40;canvas.height=900;
+    canvas.getContext('2d').fillRect(0,0,40,900);
+    const pdf=await DAVEImagePDF.create(canvas.toDataURL('image/jpeg'));
+    let invalidRejected=false;try{await DAVEImagePDF.create('data:text/html;base64,PHNjcmlwdD4=');}catch(_){invalidRejected=true;}
+    return {bytes:[...new Uint8Array(await pdf.arrayBuffer())],invalidRejected};
+  });
+  expect(result.invalidRejected).toBe(true);
+  const bytes=Buffer.from(result.bytes),text=bytes.toString('latin1');
+  const offset=Number(/startxref\n(\d+)\n%%EOF/.exec(text)[1]);
+  expect(text.slice(offset,offset+4)).toBe('xref');
+  const entries=text.slice(offset).split('\n');
+  for(let id=1;id<=5;id++){
+    const position=Number(entries[id+2].slice(0,10));
+    expect(bytes.toString('ascii',position,position+7)).toBe(id+' 0 obj');
+  }
+  expect(text).toContain('/MediaBox [0 0 595.28 841.89]');
+  expect(text).not.toMatch(/\/(JavaScript|OpenAction|Encrypt|URI)\b/);
+  const matrix=/q\n([\d.]+) 0 0 ([\d.]+) ([\d.]+) ([\d.]+) cm/.exec(text);
+  const [width,height,left,bottom]=matrix.slice(1).map(Number);
+  expect(left).toBeCloseTo(28.3465,3);expect(bottom).toBeCloseTo(28.3465,3);
+  expect(left+width).toBeLessThan(595.28);expect(bottom+height).toBeLessThan(841.89);
+});

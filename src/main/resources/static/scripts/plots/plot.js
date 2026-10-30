@@ -975,17 +975,8 @@ function Plot(id, plotConfig, getDataFromServerFn, onFiltersChangedFn, onPlotRea
   }
 
   this.saveAsPDF = function () {
-    var width = this.plotElem._fullLayout.width;
-    var height = this.plotElem._fullLayout.height;
     return Plotly.toImage(this.plotElem, { format: 'jpeg' }).then(function (image) {
-      var pdf = new window.jspdf.jsPDF();
-      var page = pdf.internal.pageSize;
-      var pageWidth = typeof page.getWidth === 'function' ? page.getWidth() : page.width;
-      var pageHeight = typeof page.getHeight === 'function' ? page.getHeight() : page.height;
-      var scale = Math.min((pageWidth - 20) / width, (pageHeight - 20) / height);
-      pdf.addImage(image, 'JPEG', 10, 10, width * scale, height * scale);
-      pdf.save(currentObj.getTitle() + '.pdf');
-      return true;
+      return DAVEImagePDF.save(image, currentObj.getTitle() + '.pdf');
     }).catch(function (error) {
       logErr('PDF export failed: ' + error.message);
       return false;

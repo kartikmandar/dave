@@ -28,11 +28,7 @@ SOURCES = [
         "Apache-2.0",
         ["https://raw.githubusercontent.com/mathjax/MathJax/2.7.9/LICENSE"],
     ),
-    (
-        "jspdf-4.2.1",
-        "MIT",
-        ["https://raw.githubusercontent.com/parallax/jsPDF/v4.2.1/LICENSE"],
-    ),
+    ("wicked-good-xpath", "MIT", ["https://raw.githubusercontent.com/google/wicked-good-xpath/829cd0d85e51b7e23d6c4ef596cc83374ac1a430/LICENSE"]),
     (
         "waiting-dialog",
         "MIT",
@@ -150,7 +146,7 @@ def main():
         if (static / "scripts/external" / removed).exists():
             raise ValueError(f"Legacy component still packaged: {removed}")
     first_party = []
-    for filename in ("logPanel.js", "canvasExport.js"):
+    for filename in ("logPanel.js", "canvasExport.js", "imagePDF.js"):
         file = static / "scripts" / filename
         source = file.read_text()
         if not source.startswith("/* SPDX-License-Identifier: Apache-2.0"):

@@ -96,7 +96,7 @@ test('native PNG download keeps the page and its workspace state in place', asyn
 });
 
 test('actual plot PNG and PDF exports retain plotted content through Plotly', async ({ page }) => {
-  for (const script of ['external/jquery-4.0.0.min.js','external/jquery-ui-1.14.1.min.js','config.js','common.js','htmlControls.js','tabPanels/tabpanel.js','plots/plotter.js','plots/plot.js','external/plotly-3.6.0.min.js','external/jspdf-4.2.1.umd.min.js']) {
+  for (const script of ['external/jquery-4.0.0.min.js','external/jquery-ui-1.14.1.min.js','config.js','common.js','htmlControls.js','tabPanels/tabpanel.js','plots/plotter.js','plots/plot.js','external/plotly-3.6.0.min.js','imagePDF.js']) {
     await page.addScriptTag({path:path.join(scripts,script)});
   }
   await page.evaluate(async()=>{

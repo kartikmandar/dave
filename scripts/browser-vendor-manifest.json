@@ -26,13 +26,6 @@
       "archiveSha256": "11b43882ef638afb066cc87a298cf085d6ca4184b62471a511b3ed0af991f8e6"
     },
     {
-      "package": "jspdf",
-      "version": "4.2.1",
-      "url": "https://registry.npmjs.org/jspdf/-/jspdf-4.2.1.tgz",
-      "integrity": "sha512-YyAXyvnmjTbR4bHQRLzex3CuINCDlQnBqoSYyjJwTP2x9jDLuKDzy7aKUl0hgx3uhcl7xzg32agn5vlie6HIlQ==",
-      "archiveSha256": "e97bd16e3211928442c631b20dcefa78a8e10dad8ccbe97160b89b214745603a"
-    },
-    {
       "package": "mathjax",
       "version": "2.7.9",
       "url": "https://registry.npmjs.org/mathjax/-/mathjax-2.7.9.tgz",
@@ -186,8 +179,6 @@
     "colorpicker.js": "1c0c3e28c820b480ed7ebd54137518313bde5479580a2075d2b138a23b6f421a",
     "jquery-4.0.0.min.js": "39a546ea9ad97f8bfaf5d3e0e8f8556adb415e470e59007ada9759dce472adaa",
     "jquery-ui-1.14.1.min.js": "0254e2768f39b973e54b2c9a64db23257782b34ede4afdebe3793209573c0a12",
-    "jspdf-4.2.1.LICENSE": "dc388ec35ff463288cdde3588a36fd4ed12a45deff053243b37309acc9ef583b",
-    "jspdf-4.2.1.umd.min.js": "e6551fcdc32f09d6853b2c5126d18d01d9447e0da618a41a11ebeee0f6c20d54",
     "mathjax-2.7.9.LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
     "plotly-3.6.0.min.js": "41a395c2d558d13d3655a1ebafaa67a072c2c1ac8c269e0ee67e18c9a137ac99",
     "waiting_dialog.js": "3558dc8fd68fc05739eb89c2107ea0b3639c90f6e64e3491f896e4bb88ca7059"
@@ -203,6 +194,7 @@
     }
   ],
   "policyFiles": {
-    "../mathJaxConfig.js": "e4cd0666b3bb019eb5a0a27d5a73d8b2c12b6d6a588e01073c1c51e6517e15ed"
+    "../mathJaxConfig.js": "e4cd0666b3bb019eb5a0a27d5a73d8b2c12b6d6a588e01073c1c51e6517e15ed",
+    "../imagePDF.js": "57035e39e08b3e80dcbc3436f72779b05deb246507894808de1c6bef7e8227d6"
   }
 }

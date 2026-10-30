@@ -9,7 +9,7 @@ inventory; use --live for a fresh GitHub Advisory Database query before a releas
 
 | Component | Shipped disposition | Evidence |
 | --- | --- | --- |
-| jsPDF | 1.3.3 legacy file removed; official 4.2.1 UMD used by actual PDF action | 15 prior registry advisories; 4.2.1 fixes latest HTML-injection advisory; real JPEG/PDF content regression |
+| jsPDF | Removed from the served app, including the briefly evaluated 4.2.1 build | Older advisories and an unlicensed embedded MD5 header avoided; original Apache-2.0 single-image PDF writer preserves the existing page/export |
 | Async | 2.5.0 removed; 2.6.4 retains the callback/waterfall API | GHSA-fwr7-v2mv-hh25; prototype-pollution negative regression and waterfall result |
 | MathJax | 2.7.0 replaced with 2.7.9, matching TeX/SVG interfaces; local TeX/accessibility modules included | GHSA-3c48-6pcv-88rm fixed; Safe extension blocks executable/file URLs; real typesetting and no-missing-module regression |
 | Plotly | Active 3.6.0 retained | No matching non-withdrawn registry advisories; unused 1.30.1, its backup and 2.35.2 removed |
@@ -43,3 +43,11 @@ Primary sources:
 - https://github.com/advisories/GHSA-3c48-6pcv-88rm
 - https://github.com/advisories/GHSA-v638-q856-grg8
 - https://github.com/mathjax/MathJax/issues/3074#issuecomment-1658291365
+
+The original imagePDF.js writer embeds the same Plotly JPEG in a single portrait
+A4 page with 10 mm margins. It implements PDF 1.3 image objects and byte-accurate
+cross references; it has no forms, HTML, encryption, script or external-resource
+features. Tests check cross-reference offsets, fit bounds, invalid input and
+actual plot pixels. Reference: https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/pdfreference1.3.pdf.
+MathJax's bundled Wicked Good XPath copy also carries the upstream Google/Cybozu
+MIT notice in the companion inventory; full source headers remain intact.

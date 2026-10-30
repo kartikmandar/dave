@@ -352,8 +352,8 @@ clean-Mac publication holds explicitly retained.
 ## Runtime-source and browser advisory review batch
 
 The previous replacement app remains the current draft download until the next
-signed/notarized asset set is verified. The new batch updates the actual jsPDF
-asset to 4.2.1, Async to 2.6.4 and MathJax to 2.7.9 with local TeX/accessibility
+signed/notarized asset set is verified. The new batch removes jsPDF in favor of an original Apache-2.0 single-image PDF
+writer, and updates Async to 2.6.4 and MathJax to 2.7.9 with local TeX/accessibility
 modules and Safe configuration. Obsolete Plotly/html2canvas copies are removed.
 See security/BROWSER_ADVISORY_REVIEW.md for the exact remaining disputed MathJax
 exception and scripts/audit-browser-vendors.py --live for fresh registry checks.
